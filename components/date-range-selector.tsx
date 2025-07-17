@@ -1,22 +1,28 @@
-"use client"
+"use client";
 
-import { ChevronLeft, ChevronRight, Calendar, Clock } from "lucide-react"
-import { useDashboardStore } from "@/lib/store"
+import { ChevronLeft, ChevronRight, Calendar, Clock } from "lucide-react";
+import { useDashboardStore } from "@/lib/store";
 
-const regions = ["Region A", "Region B", "Region C", "Region D"]
-const ccOptions = ["CC 1", "CC 2", "CC 3", "CC 4"]
+const regions = ["Region A", "Region B", "Region C", "Region D"];
+const ccOptions = ["CC 1", "CC 2", "CC 3", "CC 4"];
 
 export function DateRangeSelector() {
-  const { selectedDateRange, selectedRegion, selectedCC, setSelectedRegion, setSelectedCC, navigateDate } =
-    useDashboardStore()
+  const {
+    selectedDateRange,
+    selectedRegion,
+    selectedCC,
+    setSelectedRegion,
+    setSelectedCC,
+    navigateDate,
+  } = useDashboardStore();
 
   const handleDateToggle = () => {
-    console.log("Date button clicked - opening date picker")
-  }
+    console.log("Date button clicked - opening date picker");
+  };
 
   const handleTimeToggle = () => {
-    console.log("Time button clicked - opening time picker")
-  }
+    console.log("Time button clicked - opening time picker");
+  };
 
   return (
     <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200 max-w-full">
@@ -33,7 +39,9 @@ export function DateRangeSelector() {
           <div className="flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl border border-slate-200 min-w-0">
             <Calendar size={20} className="text-blue-600 flex-shrink-0" />
             <div className="text-center min-w-0">
-              <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">Date Range</div>
+              <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                Date Range
+              </div>
               <div className="text-sm md:text-lg font-bold text-slate-800 truncate">
                 {selectedDateRange.from} - {selectedDateRange.to}
               </div>
@@ -73,7 +81,11 @@ export function DateRangeSelector() {
           >
             <option value="">Region</option>
             {regions.map((region) => (
-              <option key={region} value={region} className="bg-white text-slate-800">
+              <option
+                key={region}
+                value={region}
+                className="bg-white text-slate-800"
+              >
                 {region}
               </option>
             ))}
@@ -94,5 +106,5 @@ export function DateRangeSelector() {
         </div>
       </div>
     </div>
-  )
+  );
 }

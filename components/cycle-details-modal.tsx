@@ -1,12 +1,13 @@
-"use client"
+"use client";
 
-import { X, Clock, Settings, AlertCircle } from "lucide-react"
-import { useDashboardStore } from "@/lib/store"
+import { X, Clock, Settings, AlertCircle } from "lucide-react";
+import { useDashboardStore } from "@/lib/store";
 
 export function CycleDetailsModal() {
-  const { selectedCycleInfo, showCycleDetails, setShowCycleDetails } = useDashboardStore()
+  const { selectedCycleInfo, showCycleDetails, setShowCycleDetails } =
+    useDashboardStore();
 
-  if (!showCycleDetails || !selectedCycleInfo) return null
+  if (!showCycleDetails || !selectedCycleInfo) return null;
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -17,7 +18,9 @@ export function CycleDetailsModal() {
               <Settings size={24} className="text-white" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-slate-800">Cycle Details</h3>
+              <h3 className="text-2xl font-bold text-slate-800">
+                Cycle Details
+              </h3>
               <p className="text-slate-600">Operational information</p>
             </div>
           </div>
@@ -32,22 +35,30 @@ export function CycleDetailsModal() {
         <div className="space-y-4 mb-8">
           <div className="flex justify-between items-center p-4 bg-slate-50 rounded-xl">
             <span className="font-semibold text-slate-700">Cycle Name:</span>
-            <span className="font-bold text-slate-800">{selectedCycleInfo.name}</span>
+            <span className="font-bold text-slate-800">
+              {selectedCycleInfo.name}
+            </span>
           </div>
           <div className="flex justify-between items-center p-4 bg-slate-50 rounded-xl">
             <span className="font-semibold text-slate-700">Turbine:</span>
-            <span className="font-bold text-slate-800">{selectedCycleInfo.turbine}</span>
+            <span className="font-bold text-slate-800">
+              {selectedCycleInfo.turbine}
+            </span>
           </div>
           <div className="flex justify-between items-center p-4 bg-slate-50 rounded-xl">
             <span className="font-semibold text-slate-700 flex items-center gap-2">
               <Clock size={16} />
               Start Time:
             </span>
-            <span className="font-bold text-slate-800">{selectedCycleInfo.start}:00</span>
+            <span className="font-bold text-slate-800">
+              {selectedCycleInfo.start}:00
+            </span>
           </div>
           <div className="flex justify-between items-center p-4 bg-slate-50 rounded-xl">
             <span className="font-semibold text-slate-700">Duration:</span>
-            <span className="font-bold text-slate-800">{selectedCycleInfo.end - selectedCycleInfo.start} hours</span>
+            <span className="font-bold text-slate-800">
+              {selectedCycleInfo.end - selectedCycleInfo.start} hours
+            </span>
           </div>
           <div className="flex justify-between items-center p-4 bg-slate-50 rounded-xl">
             <span className="font-semibold text-slate-700 flex items-center gap-2">
@@ -61,7 +72,9 @@ export function CycleDetailsModal() {
                   : "bg-orange-100 text-orange-800 border border-orange-200"
               }`}
             >
-              {selectedCycleInfo.color.includes("blue") ? "Normal Operation" : "Attention Required"}
+              {selectedCycleInfo.color.includes("blue")
+                ? "Normal Operation"
+                : "Attention Required"}
             </span>
           </div>
         </div>
@@ -79,5 +92,5 @@ export function CycleDetailsModal() {
         </div>
       </div>
     </div>
-  )
+  );
 }

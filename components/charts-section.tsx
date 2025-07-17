@@ -1,12 +1,21 @@
-"use client"
+"use client";
 
-import { BarChart, LineChart, Table, TrendingUp, Vibrate, Flame, Zap, Cpu } from "lucide-react"
-import { useDashboardStore } from "@/lib/store"
+import {
+  BarChart,
+  LineChart,
+  Table,
+  TrendingUp,
+  Vibrate,
+  Flame,
+  Zap,
+  Cpu,
+} from "lucide-react";
+import { useDashboardStore } from "@/lib/store";
 
 const groupDisplayData = {
   진동: {
     title: "진동 분석",
-    description: "실시간 진동 및 베어링 분석",
+    description: "진동 및 베어링 관련 데이터",
     icon: Vibrate,
     gradient: "from-emerald-500 to-teal-600",
     charts: [
@@ -17,7 +26,7 @@ const groupDisplayData = {
   },
   연소: {
     title: "연소 분석",
-    description: "화염, 온도 및 연료 모니터링 시스템",
+    description: "화염, 온도 및 연료 관련 데이터",
     icon: Flame,
     gradient: "from-orange-500 to-red-600",
     charts: [
@@ -28,7 +37,7 @@ const groupDisplayData = {
   },
   전기: {
     title: "전기 분석",
-    description: "전압, 전류 및 전력 모니터링",
+    description: "전력 관련 데이터",
     icon: Zap,
     gradient: "from-blue-500 to-indigo-600",
     charts: [
@@ -39,7 +48,7 @@ const groupDisplayData = {
   },
   단위기기: {
     title: "장치 분석",
-    description: "컨트롤러 CPU, 메모리 및 네트워크 모니터링",
+    description: "펌프 관련 데이터",
     icon: Cpu,
     gradient: "from-purple-500 to-pink-600",
     charts: [
@@ -59,28 +68,33 @@ const groupDisplayData = {
       { title: "Table C", type: "데이터 테이블", icon: Table },
     ],
   },
-}
+};
 
 export function ChartsSection() {
-  const { selectedVariableGroup } = useDashboardStore()
+  const { selectedVariableGroup } = useDashboardStore();
 
   const handleChartClick = (chart: any) => {
-    alert(`Opening ${chart.title} for ${selectedVariableGroup} group.`)
-  }
+    alert(`Opening ${chart.title} for ${selectedVariableGroup} group.`);
+  };
 
   const displayData =
-    groupDisplayData[selectedVariableGroup as keyof typeof groupDisplayData] || groupDisplayData.default
-  const { icon: GroupIcon, gradient } = displayData
+    groupDisplayData[selectedVariableGroup as keyof typeof groupDisplayData] ||
+    groupDisplayData.default;
+  const { icon: GroupIcon, gradient } = displayData;
 
   return (
     <div className="mt-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <div className={`p-3 rounded-xl bg-gradient-to-r ${gradient} shadow-lg`}>
+          <div
+            className={`p-3 rounded-xl bg-gradient-to-r ${gradient} shadow-lg`}
+          >
             <GroupIcon size={24} className="text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800">{displayData.title}</h2>
+            <h2 className="text-2xl font-bold text-slate-800">
+              {displayData.title}
+            </h2>
             <p className="text-slate-600">{displayData.description}</p>
           </div>
         </div>
@@ -100,18 +114,24 @@ export function ChartsSection() {
                 <chart.icon size={28} className="text-white" />
               </div>
               <div className="text-right">
-                <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">{chart.type}</div>
+                <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  {chart.type}
+                </div>
               </div>
             </div>
 
-            <h3 className="text-xl font-bold text-slate-800 mb-6">{chart.title}</h3>
+            <h3 className="text-xl font-bold text-slate-800 mb-6">
+              {chart.title}
+            </h3>
 
             <div className="h-32 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-200">
-              <span className="text-sm font-medium text-slate-500">클릭하여 확장</span>
+              <span className="text-sm font-medium text-slate-500">
+                클릭하여 확장
+              </span>
             </div>
           </div>
         ))}
       </div>
     </div>
-  )
+  );
 }
