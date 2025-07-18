@@ -275,7 +275,7 @@ export const useDashboardStore = create<DashboardState>((set) => ({
   selectedCC: "",
 
   /* 변수 그룹 */
-  selectedVariableGroup: "진동",
+  selectedVariableGroup: "연소",
   selectedVariableInfo: null,
 
   /* 사이클 상세 정보 */

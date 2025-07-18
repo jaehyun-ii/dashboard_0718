@@ -13,6 +13,18 @@ import {
 import { useDashboardStore } from "@/lib/store";
 
 const groupDisplayData = {
+  연소: {
+    title: "연소 분석",
+    description: "화염, 온도 및 연료 관련 데이터",
+    icon: Flame,
+    gradient: "from-orange-500 to-red-600",
+    charts: [
+      { title: "배기 온도", type: "선형 차트", icon: LineChart },
+      { title: "온도 편차", type: "막대 차트", icon: BarChart },
+      { title: "연소 동압", type: "막대 차트", icon: BarChart },
+      { title: "연료 모드", type: "데이터 테이블", icon: Table },
+    ],
+  },
   진동: {
     title: "진동 분석",
     description: "진동 및 베어링 관련 데이터",
@@ -24,17 +36,7 @@ const groupDisplayData = {
       { title: "축 속도 (RPM)", type: "데이터 테이블", icon: Table },
     ],
   },
-  연소: {
-    title: "연소 분석",
-    description: "화염, 온도 및 연료 관련 데이터",
-    icon: Flame,
-    gradient: "from-orange-500 to-red-600",
-    charts: [
-      { title: "배기 온도", type: "선형 차트", icon: LineChart },
-      { title: "화염 주파수", type: "막대 차트", icon: BarChart },
-      { title: "연료 및 O2 수준", type: "데이터 테이블", icon: Table },
-    ],
-  },
+
   전기: {
     title: "전기 분석",
     description: "전력 관련 데이터",
@@ -100,7 +102,9 @@ export function ChartsSection() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 max-w-full">
+      <div
+        className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-${displayData.charts.length} gap-6 max-w-full`}
+      >
         {displayData.charts.map((chart) => (
           <div
             key={chart.title}
