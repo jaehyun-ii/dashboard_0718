@@ -1,8 +1,8 @@
-"use client"; // 클라이언트 컴포넌트로 지정 (Next.js에서 SSR이 아닌 클라이언트 렌더링 명시)
+"use client";
 
 import type React from "react";
-import { useDashboardStore, timelineData } from "@/lib/store"; // 전역 상태관리 훅 및 데이터
-import { useRef, useState, useEffect } from "react"; // 리액트 훅
+import { useDashboardStore, timelineData } from "@/lib/store";
+import { useRef, useState, useEffect } from "react";
 import {
   CalendarIcon,
   Search,
@@ -10,22 +10,22 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
-} from "lucide-react"; // 아이콘 컴포넌트
-import { Button } from "@/components/ui/button"; // 공통 버튼 컴포넌트
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"; // 날짜 선택용 팝오버
-import { Calendar } from "@/components/ui/calendar"; // 날짜 선택 캘린더
-import { cn } from "@/lib/utils"; // 조건부 className 유틸
-import { format } from "date-fns"; // 날짜 포맷 라이브러리
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 // 지역 및 CC 선택 옵션
-const regions = ["지역 A", "지역 B", "지역 C", "지역 D"];
+const regions = ["신인천", "지역 B", "지역 C", "지역 D"];
 const ccOptions = ["CC 1", "CC 2", "CC 3", "CC 4"];
 
-// 날짜 범위 내 모든 날짜 문자열 배열 생성 함수
+// 날짜 범위 내 날짜 리스트 생성
 const getDatesInRange = (from: string, to: string): string[] => {
   const dates: string[] = [];
   const currentDate = new Date(`${from}T00:00:00Z`);
@@ -38,7 +38,6 @@ const getDatesInRange = (from: string, to: string): string[] => {
 };
 
 export function OptimizedTimelineView() {
-  // 전역 상태값 및 상태 설정 함수
   const {
     timeline,
     selectedRegion,
@@ -54,13 +53,10 @@ export function OptimizedTimelineView() {
     navigateDate,
   } = useDashboardStore();
 
-  // 타임라인 스크롤 참조 및 상태
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
-
-  // 날짜, 시간, 검색어 관련 상태
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date(timeline.currentDate)
@@ -68,7 +64,6 @@ export function OptimizedTimelineView() {
   const [selectedTime, setSelectedTime] = useState(timeline.currentTime);
   const [isTimelineExpanded, setIsTimelineExpanded] = useState(true);
 
-  // 현재 주차 날짜 리스트 및 시간대 생성
   const currentWeekDates = getDatesInRange(
     selectedDateRange.from,
     selectedDateRange.to
@@ -78,7 +73,6 @@ export function OptimizedTimelineView() {
   );
   const totalWidth = timeGrid.length * 100;
 
-  // 현재 주차에 해당하는 사이클만 필터링
   const cyclesForWeek = timelineData.cycles.filter((cycle) => {
     const cycleDate = new Date(`${cycle.date}T00:00:00Z`);
     const fromDate = new Date(`${selectedDateRange.from}T00:00:00Z`);
@@ -86,7 +80,6 @@ export function OptimizedTimelineView() {
     return cycleDate >= fromDate && cycleDate <= toDate;
   });
 
-  // 마우스 드래그 기반 스크롤 이벤트 핸들러들
   const onMouseDown = (e: React.MouseEvent) => {
     if (!scrollContainerRef.current) return;
     setIsDragging(true);
@@ -109,10 +102,8 @@ export function OptimizedTimelineView() {
     scrollContainerRef.current.scrollLeft = scrollLeft - walk;
   };
 
-  // 사이클 클릭 시 선택 처리
   const handleCycleClick = (cycle: any) => setSelectedCycle(cycle);
 
-  // 날짜와 시간 기반으로 이동
   const handleDateTimeNavigation = () => {
     if (selectedDate) {
       const formattedDate = format(selectedDate, "yyyy-MM-dd");
@@ -120,44 +111,58 @@ export function OptimizedTimelineView() {
     }
   };
 
-  // 검색 실행
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery) searchAndNavigateToCycle(searchQuery);
   };
+  useEffect(() => {
+    if (!selectedRegion) setSelectedRegion("신인천");
+    if (!selectedCC) setSelectedCC("CC 2");
+  }, [selectedRegion, selectedCC, setSelectedRegion, setSelectedCC]);
 
-  // 특정 시간 위치로 스크롤
   useEffect(() => {
     if (timeline.scrollTo && scrollContainerRef.current) {
       const { date, time } = timeline.scrollTo;
-      const targetIndex = timeGrid.findIndex(
-        (gridItem) => gridItem.date === date && gridItem.hour === time
-      );
+      const scrollContainer = scrollContainerRef.current;
 
-      if (targetIndex !== -1) {
-        const newScrollLeft = targetIndex * 100;
-        scrollContainerRef.current.scrollTo({
-          left: newScrollLeft,
-          behavior: "smooth",
-        });
-      }
-      setScrollTo(null);
+      const timeout = setTimeout(() => {
+        const selector = `[data-time-cell="${date}-${time}"]`;
+        const cellElement =
+          scrollContainer.querySelector<HTMLDivElement>(selector);
+
+        if (cellElement) {
+          const cellOffset = cellElement.offsetLeft;
+          const cellWidth = cellElement.offsetWidth;
+          const containerWidth = scrollContainer.clientWidth;
+          const maxScrollLeft = scrollContainer.scrollWidth - containerWidth;
+
+          // 중앙 정렬 위치 계산
+          const scrollTo = cellOffset - containerWidth / 2 + cellWidth / 2;
+
+          // 오버스크롤 방지
+          scrollContainer.scrollTo({
+            left: Math.min(Math.max(scrollTo, 0), maxScrollLeft),
+            behavior: "smooth",
+          });
+        }
+
+        setScrollTo(null);
+      }, 100); // 렌더링 이후 실행
+
+      return () => clearTimeout(timeout);
     }
-  }, [timeline.scrollTo, timeGrid, setScrollTo]);
+  }, [timeline.scrollTo]);
 
-  // 날짜 범위 변경 시 스크롤 초기화
   useEffect(() => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollLeft = 0;
     }
   }, [selectedDateRange]);
 
-  // 컴포넌트 마운트 시 최신 위치로 이동
   useEffect(() => {
     navigateToMostRecent();
   }, [navigateToMostRecent]);
 
-  // 날짜 문자열을 한국어 포맷으로 변환
   const formatDateDisplay = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("ko-KR", {
       month: "short",
@@ -378,6 +383,7 @@ export function OptimizedTimelineView() {
                         {timeGrid.map(({ date, hour }) => (
                           <div
                             key={`${date}-${hour}`}
+                            data-time-cell={`${date}-${hour}`} // ✅ 중요!
                             className="w-[100px] flex-shrink-0 text-center p-1 font-semibold text-slate-500 border-r border-slate-200 bg-slate-100"
                           >
                             <div className="text-xs">{hour}:00</div>

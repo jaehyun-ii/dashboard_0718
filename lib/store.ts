@@ -41,32 +41,6 @@ const dates = Array.from({ length: 90 }, (_, i) => {
 
 // 변수 더미
 const makeVars = (cycle: string): VariableInfo[] => [
-  // 진동 그룹
-  {
-    name: "축 진동",
-    value: "",
-    status: Math.random() > 0.3 ? "healthy" : "warning",
-    group: "진동",
-  },
-  {
-    name: "베어링 진동",
-    value: "",
-    status: "healthy",
-    group: "진동",
-  },
-  {
-    name: "메탈 온도",
-    value: "",
-    status: "healthy",
-    group: "진동",
-  },
-  {
-    name: "윤활 제어",
-    value: "",
-    status: "healthy",
-    group: "진동",
-  },
-
   // 연소 그룹
   {
     name: "압축기",
@@ -91,6 +65,31 @@ const makeVars = (cycle: string): VariableInfo[] => [
     value: "",
     status: "warning",
     group: "연소",
+  },
+  // 진동 그룹
+  {
+    name: "축 진동",
+    value: "",
+    status: Math.random() > 0.3 ? "healthy" : "warning",
+    group: "진동",
+  },
+  {
+    name: "베어링 진동",
+    value: "",
+    status: "healthy",
+    group: "진동",
+  },
+  {
+    name: "메탈 온도",
+    value: "",
+    status: "healthy",
+    group: "진동",
+  },
+  {
+    name: "윤활 제어",
+    value: "",
+    status: "healthy",
+    group: "진동",
   },
 
   // 전기 그룹
