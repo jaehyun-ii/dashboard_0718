@@ -1,17 +1,15 @@
-"use client"
+"use client";
 
-import { Sidebar } from "@/components/sidebar"
-import { Topbar } from "@/components/topbar"
-import { OptimizedTimelineView } from "@/components/optimized-timeline-view"
-import { VariableStatusCards } from "@/components/variable-status-cards"
-import { ChartsSection } from "@/components/charts-section"
-import { CycleDetailsModal } from "@/components/cycle-details-modal"
-import { VariableDetailsModal } from "@/components/variable-details-modal"
-import { VariableTooltip } from "@/components/variable-tooltip"
-import { useDashboardStore } from "@/lib/store"
+import { Sidebar } from "@/components/sidebar";
+import { Topbar } from "@/components/topbar";
+import { OptimizedTimelineView } from "@/components/optimized-timeline-view";
+import { VariableStatusCards } from "@/components/variable-status-cards";
+import { ChartsSection } from "@/components/charts-section";
+import { CycleDetailsModal } from "@/components/cycle-details-modal";
+import { useDashboardStore } from "@/lib/store";
 
 export default function DashboardPage() {
-  const { sidebarOpen } = useDashboardStore()
+  const { sidebarOpen } = useDashboardStore();
 
   return (
     <div className="flex h-screen bg-gray-50 max-w-full overflow-hidden">
@@ -33,8 +31,6 @@ export default function DashboardPage() {
 
       {/* Modals */}
       <CycleDetailsModal />
-      <VariableDetailsModal />
-      <VariableTooltip />
     </div>
-  )
+  );
 }

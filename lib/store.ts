@@ -27,7 +27,7 @@ export interface CycleInfo {
 const fmt = (d: Date) => d.toISOString().slice(0, 10);
 const turbines = ["Turbine A", "Turbine B", "Turbine C", "Turbine D"];
 const colors = [
-  "from-blue-400 to-blue-500",
+  "from-red-500 to-red-00",
   "from-emerald-500 to-emerald-600",
   "from-orange-500 to-red-700",
 ];
