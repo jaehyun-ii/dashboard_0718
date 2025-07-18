@@ -3,8 +3,8 @@
 import { ChevronLeft, ChevronRight, Calendar, Clock } from "lucide-react";
 import { useDashboardStore } from "@/lib/store";
 
-const regions = ["Region A", "Region B", "Region C", "Region D"];
-const ccOptions = ["CC 1", "CC 2", "CC 3", "CC 4"];
+const regions = ["신인천", "Region B", "Region C", "Region D"];
+const ccOptions = ["1 CC", "2 CC", "3 CC", "4 CC"];
 
 export function DateRangeSelector() {
   const {
