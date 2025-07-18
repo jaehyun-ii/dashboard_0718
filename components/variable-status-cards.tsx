@@ -81,10 +81,12 @@ export function VariableStatusCards() {
   if (!timeline.selectedCycle) {
     return (
       <div className="mt-6">
-        <h2 className="text-2xl font-bold text-slate-800 mb-2">시스템 변수</h2>
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">
+          이상탐지 변수
+        </h2>
         <div className="bg-slate-50 rounded-2xl p-12 text-center border border-slate-200">
           <p className="text-slate-500">
-            타임라인에서 사이클을 선택하여 시스템 변수를 확인하세요.
+            타임라인에서 사이클을 선택하여 이상탐지 변수를 확인하세요.
           </p>
         </div>
       </div>
@@ -102,7 +104,7 @@ export function VariableStatusCards() {
   return (
     <div className="mt-6">
       <div className="flex items-center mb-6">
-        <h2 className="text-2xl font-bold text-slate-800 ">시스템 변수</h2>
+        <h2 className="text-2xl font-bold text-slate-800 ">이상탐지 변수</h2>
         {/* 선택된 사이클 정보 출력 */}
         <div className="flex">
           <div className="px-3 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium ml-3">

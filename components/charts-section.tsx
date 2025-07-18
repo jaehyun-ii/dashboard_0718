@@ -59,7 +59,7 @@ const groupDisplayData = {
   },
   default: {
     title: "분석 대시보드",
-    description: "상세 차트를 보려면 시스템 변수 카테고리를 선택하세요.",
+    description: "상세 차트를 보려면 이상탐지 변수 카테고리를 선택하세요.",
     icon: TrendingUp,
     gradient: "from-slate-500 to-slate-600",
     charts: [
