@@ -1,23 +1,29 @@
-"use client"
-import { Home, Search, BarChart, MessageSquare, SidebarIcon, TreePine } from "lucide-react" // Removed ChevronLeft, ChevronRight
-import { useDashboardStore } from "@/lib/store"
+"use client";
+import {
+  Home,
+  Search,
+  BarChart,
+  MessageSquare,
+  SidebarIcon,
+  TreePine,
+} from "lucide-react"; // Removed ChevronLeft, ChevronRight
+import { useDashboardStore } from "@/lib/store";
 
 const menuItems = [
   { id: "dashboard", title: "대시보드", icon: Home },
   { id: "present-detection", title: "현재 감지", icon: Search },
   { id: "report", title: "보고서", icon: BarChart },
   { id: "chatbot", title: "챗봇", icon: MessageSquare },
-  { id: "sidebar", title: "사이드바", icon: SidebarIcon },
-  { id: "tree2", title: "트리2", icon: TreePine },
-]
+];
 
 export function Sidebar() {
-  const { sidebarOpen, setSidebarOpen, activeMenuItem, setActiveMenuItem } = useDashboardStore()
+  const { sidebarOpen, setSidebarOpen, activeMenuItem, setActiveMenuItem } =
+    useDashboardStore();
 
   const handleMenuClick = (itemId: string) => {
-    setActiveMenuItem(itemId)
-    console.log(`Navigating to: ${itemId}`)
-  }
+    setActiveMenuItem(itemId);
+    console.log(`Navigating to: ${itemId}`);
+  };
 
   return (
     <>
@@ -51,10 +57,18 @@ export function Sidebar() {
             >
               <item.icon
                 size={22}
-                className={`${activeMenuItem === item.id ? "text-white" : "text-slate-300 group-hover:text-white"} transition-colors`}
+                className={`${
+                  activeMenuItem === item.id
+                    ? "text-white"
+                    : "text-slate-300 group-hover:text-white"
+                } transition-colors`}
               />
               <span
-                className={`text-sm font-medium ${activeMenuItem === item.id ? "text-white" : "text-slate-300 group-hover:text-white"} transition-colors`}
+                className={`text-sm font-medium ${
+                  activeMenuItem === item.id
+                    ? "text-white"
+                    : "text-slate-300 group-hover:text-white"
+                } transition-colors`}
               >
                 {item.title}
               </span>
@@ -65,8 +79,11 @@ export function Sidebar() {
 
       {/* Overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-30" onClick={() => setSidebarOpen(false)} />
+        <div
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-30"
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
     </>
-  )
+  );
 }

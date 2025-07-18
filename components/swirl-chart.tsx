@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-
+import { useDashboardStore } from "@/lib/store"; // ⬅️ 실제 경로에 맞게 수정
 /* ------------------------------------------------------------------
   Utility equations used to compute rotation in degrees
 ------------------------------------------------------------------ */
@@ -29,28 +29,28 @@ function equation3(x: number) {
 /* ------------------------------------------------------------------
   Default demo data used when no data prop is supplied
 ------------------------------------------------------------------ */
+
 const DEFAULT_DATA = [
   98, 96, 94, 91, 89, 86, 84, 81, 79, 76, 74, 71, 69, 66, 64, 61, 59, 56, 54,
   51, 49, 46, 44, 41, 39, 36, 34,
 ];
 
 export interface SwirlChartProps {
-  /** Data values (0-100 range expected) */
-  data?: number[];
-  /** Input value used for the rotation equations */
+  cycleId: string;
   formulaInput?: number;
-  /** Override rotation in degrees */
   rotation?: number;
-  /** Show formula select control */
   showControls?: boolean;
 }
 
 export function SwirlChart({
-  data = DEFAULT_DATA,
+  cycleId,
   formulaInput = 0,
   rotation,
   showControls = true,
 }: SwirlChartProps) {
+  const swirl = useDashboardStore((s) => s.getSwirlDataByCycle(cycleId));
+  const data = swirl?.[0]?.sensors.map((s) => s.value) ?? DEFAULT_DATA;
+
   const [formula, setFormula] = useState<1 | 2 | 3>(1);
 
   const maxVal = Math.max(...data);
@@ -81,7 +81,6 @@ export function SwirlChart({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold">Swirl 차트</h3>
         {showControls && (
           <select
             className="border rounded-md p-1 text-sm"
@@ -140,6 +139,36 @@ export function SwirlChart({
             </text>
           );
         })}
+        {Array.from({ length: 14 }).map((_, i) => {
+          const n = 14;
+          const angle = (2 * Math.PI * i) / n + Math.PI * 0.65;
+          const r = (200 * Math.sin(Math.PI / n)) / (1 + Math.sin(Math.PI / n));
+          const centerRadius = r / Math.sin(Math.PI / n);
+          const cx = 250 + centerRadius * Math.cos(angle);
+          const cy = 250 + centerRadius * Math.sin(angle);
+          return (
+            <g key={i}>
+              <circle
+                cx={cx.toFixed(2)}
+                cy={cy.toFixed(2)}
+                r={r.toFixed(2)}
+                stroke="blue"
+                fill="none"
+              />
+              <text
+                x={cx.toFixed(2)}
+                y={cy.toFixed(2)}
+                fontSize="14"
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fill="blue"
+              >
+                {i + 1}
+              </text>
+            </g>
+          );
+        })}
+
         <polyline
           fill="none"
           stroke="#e11d48"

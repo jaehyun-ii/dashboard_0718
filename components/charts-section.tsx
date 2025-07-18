@@ -11,7 +11,8 @@ import {
   Cpu,
 } from "lucide-react";
 import { useDashboardStore } from "@/lib/store";
-
+import { SwirlChart } from "./swirl-chart";
+import TemperatureDeviationChart from "./temperature-deviation-chart";
 const groupDisplayData = {
   연소: {
     title: "연소 분석",
@@ -123,16 +124,19 @@ export function ChartsSection() {
                 </div>
               </div>
             </div>
-
             <h3 className="text-xl font-bold text-slate-800 mb-6">
               {chart.title}
             </h3>
-
-            <div className="h-32 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-200">
-              <span className="text-sm font-medium text-slate-500">
-                클릭하여 확장
-              </span>
-            </div>
+            {chart.title === "배기 온도" ? (
+              <SwirlChart showControls={false} cycleId={"215"} />
+            ) : (
+              <div></div>
+            )}
+            {chart.title === "온도 편차" ? (
+              <TemperatureDeviationChart />
+            ) : (
+              <div></div>
+            )}
           </div>
         ))}
       </div>
