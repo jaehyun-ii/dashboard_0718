@@ -184,17 +184,12 @@ export default function TemperatureDeviationChart() {
   const spec = 0;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>배기가스 온도 분포도</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {record && chartData.length > 0 && medianInfo ? (
-          <DualSideChart data={chartData} spec={spec} medianInfo={medianInfo} />
-        ) : (
-          <p>표시할 온도 데이터가 없습니다.</p>
-        )}
-      </CardContent>
-    </Card>
+    <>
+      {record && chartData.length > 0 && medianInfo ? (
+        <DualSideChart data={chartData} spec={spec} medianInfo={medianInfo} />
+      ) : (
+        <p>표시할 온도 데이터가 없습니다.</p>
+      )}
+    </>
   );
 }
