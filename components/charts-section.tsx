@@ -13,6 +13,8 @@ import {
 import { useDashboardStore } from "@/lib/store";
 import { SwirlChart } from "./swirl-chart";
 import TemperatureDeviationChart from "./temperature-deviation-chart";
+import BlowGraph from "./blow-graph";
+import ModeChart from "./mode-chart";
 const groupDisplayData = {
   연소: {
     title: "연소 분석",
@@ -104,7 +106,7 @@ export function ChartsSection() {
       </div>
 
       <div
-        className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-${displayData.charts.length} gap-6 max-w-full`}
+        className={`grid grid-cols-1 md:grid-cols-4 xl:grid-cols-${displayData.charts.length} gap-6 max-w-full`}
       >
         {displayData.charts.map((chart) => (
           <div
@@ -112,7 +114,7 @@ export function ChartsSection() {
             className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200 cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 group"
             onClick={() => handleChartClick(chart)}
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-2">
               <div
                 className={`p-4 rounded-xl bg-gradient-to-r ${gradient} shadow-lg group-hover:scale-110 transition-transform duration-300`}
               >
@@ -124,7 +126,7 @@ export function ChartsSection() {
                 </div>
               </div>
             </div>
-            <h3 className="text-xl font-bold text-slate-800 mb-6">
+            <h3 className="text-xl font-bold text-slate-800 mb-8 ">
               {chart.title}
             </h3>
             {chart.title === "배기 온도" ? (
@@ -137,6 +139,8 @@ export function ChartsSection() {
             ) : (
               <div></div>
             )}
+            {chart.title === "연소 동압" ? <BlowGraph /> : <div></div>}
+            {chart.title === "연료 모드" ? <ModeChart /> : <div></div>}
           </div>
         ))}
       </div>

@@ -37,6 +37,10 @@ export interface SwirlDataEntry {
   swirlData: SwirlDatum[];
 }
 
+export interface Blowchart {
+  [key: string]: number; // can1~can14
+}
+
 /* ----------------------------------------------------------------
   더미 데이터 생성 유틸
 ---------------------------------------------------------------- */
@@ -122,6 +126,29 @@ const mondayOf = (d: Date) => {
   return d;
 };
 
+/* ----------------------------------------------------------------
+  Blowchart 초기값
+---------------------------------------------------------------- */
+const blowchartValues: Blowchart = {
+  can1: 0.000602628,
+  can2: 0.000288516,
+  can3: 0.002008296,
+  can4: 0.000280384,
+  can5: 0.000292252,
+  can6: 0.000385734,
+  can7: 0.000127051,
+  can8: 0.00010946,
+  can9: 0.000181385,
+  can10: 0.000175555,
+  can11: 0.000114472,
+  can12: 0.000100567,
+  can13: 0.000116268,
+  can14: 0.000127051,
+};
+
+/* ----------------------------------------------------------------
+  Zustand Store
+---------------------------------------------------------------- */
 interface TimelineState {
   currentDate: string;
   currentTime: number;
@@ -164,6 +191,9 @@ interface DashboardState {
   swirlData: SwirlDataEntry[];
   setSwirlData: (data: SwirlDataEntry[]) => void;
   getSwirlDataByCycle: (cycleId: string) => SwirlDatum[] | null;
+
+  blowchart: Blowchart;
+  setBlowchart: (data: Blowchart) => void;
 }
 
 const getMostRecentCycle = (): CycleInfo | null => {
@@ -280,35 +310,10 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
         {
           datetime: "2023-11-15 17:30:53",
           output: 0.15,
-          sensors: [
-            { name: "T1", value: 14.54 },
-            { name: "T2", value: 16.15 },
-            { name: "T3", value: 13.94 },
-            { name: "T4", value: 12.22 },
-            { name: "T5", value: 13 },
-            { name: "T6", value: 12 },
-            { name: "T7", value: 11.44 },
-            { name: "T8", value: 12.3 },
-            { name: "T9", value: 11.71 },
-            { name: "T10", value: 10.86 },
-            { name: "T11", value: 11.81 },
-            { name: "T12", value: 11.24 },
-            { name: "T13", value: 10.85 },
-            { name: "T14", value: 12.14 },
-            { name: "T15", value: 11.58 },
-            { name: "T16", value: 10.72 },
-            { name: "T17", value: 11.91 },
-            { name: "T18", value: 11.47 },
-            { name: "T19", value: 11.29 },
-            { name: "T20", value: 11.62 },
-            { name: "T21", value: 12.3 },
-            { name: "T22", value: 11.45 },
-            { name: "T23", value: 12.37 },
-            { name: "T24", value: 12.84 },
-            { name: "T25", value: 13.55 },
-            { name: "T26", value: 14.73 },
-            { name: "T27", value: 14.68 },
-          ],
+          sensors: Array.from({ length: 27 }, (_, i) => ({
+            name: `T${i + 1}`,
+            value: 10 + Math.random() * 5,
+          })),
         },
       ],
     },
@@ -317,4 +322,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   setSwirlData: (data) => set({ swirlData: data }),
   getSwirlDataByCycle: (cycleId) =>
     get().swirlData.find((entry) => entry.cycle === cycleId)?.swirlData ?? null,
+
+  blowchart: blowchartValues,
+  setBlowchart: (data) => set({ blowchart: data }),
 }));

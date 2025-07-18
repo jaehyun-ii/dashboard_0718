@@ -28,7 +28,6 @@ interface MedianInfo {
 }
 
 const CustomTooltip = (props: TooltipProps<number, string>) => {
-  const swirl = useDashboardStore((s) => s.getSwirlDataByCycle("215"));
   const { active, payload, label } = props as any;
   if (active && payload?.length) {
     const data = payload[0].payload as TempRecord;
@@ -70,10 +69,13 @@ const DualSideChart = ({
     .sort((a, b) => (b.barValue ?? 0) - (a.barValue ?? 0));
 
   const maxItems = Math.max(greaterThanMedian.length, lessThanMedian.length);
-  const chartHeight = maxItems * 34;
+  const chartHeight = maxItems * 20;
 
   return (
-    <div className="flex justify-center" style={{ height: `${chartHeight}px` }}>
+    <div
+      className="flex justify-center mt-16"
+      style={{ height: `${chartHeight}px` }}
+    >
       <div className="flex-1 min-w-0 h-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart layout="vertical" data={lessThanMedian} barCategoryGap={0}>

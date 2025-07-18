@@ -79,21 +79,8 @@ export function SwirlChart({
   } | null>(null);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        {showControls && (
-          <select
-            className="border rounded-md p-1 text-sm"
-            value={formula}
-            onChange={(e) => setFormula(Number(e.target.value) as 1 | 2 | 3)}
-          >
-            <option value={1}>equation 1</option>
-            <option value={2}>equation 2</option>
-            <option value={3}>equation 3</option>
-          </select>
-        )}
-      </div>
-      <svg viewBox="0 0 500 500" className="w-full h-full">
+    <div>
+      <svg viewBox="0 0 500 500">
         {Array.from({ length: 10 }, (_, i) => (
           <circle
             key={i}
