@@ -39,7 +39,7 @@ export default function BlowChartGraph() {
       labels: {
         rotate: -45,
         style: {
-          fontSize: "12px",
+          fontSize: "14px",
           colors: "#475569",
         },
       },
@@ -47,12 +47,12 @@ export default function BlowChartGraph() {
     yaxis: {
       title: {
         text: "Blowout 값",
-        style: { color: "#64748b", fontSize: "14px" },
+        style: { color: "#64748b", fontSize: "16px" },
       },
       labels: {
         style: {
           colors: "#64748b",
-          fontSize: "12px",
+          fontSize: "14px",
         },
         formatter: (val: number) => val.toFixed(4), // ✅ y축 눈금은 4자리
       },

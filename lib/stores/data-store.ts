@@ -55,6 +55,15 @@ interface DataStore extends DataState, DataActions {
   searchCycles: (query: string) => CycleInfo[];
 }
 
+// Seeded random for consistent data generation
+const seededRandom = (seed: number) => {
+  let state = seed;
+  return () => {
+    state = (state * 9301 + 49297) % 233280;
+    return state / 233280;
+  };
+};
+
 const initialSwirlData: SwirlDataEntry[] = [
   {
     cycle: "215",
@@ -62,10 +71,13 @@ const initialSwirlData: SwirlDataEntry[] = [
       {
         datetime: "2023-11-15 17:30:53",
         output: 0.15,
-        sensors: Array.from({ length: 27 }, (_, i) => ({
-          name: `T${i + 1}`,
-          value: 10 + Math.random() * 5,
-        })),
+        sensors: (() => {
+          const rng = seededRandom(215);
+          return Array.from({ length: 27 }, (_, i) => ({
+            name: `T${i + 1}`,
+            value: 10 + rng() * 5,
+          }));
+        })(),
       },
     ],
   },

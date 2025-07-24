@@ -32,7 +32,7 @@ const CustomTooltip = (props: TooltipProps<number, string>) => {
   if (active && payload?.length) {
     const data = payload[0].payload as TempRecord;
     return (
-      <div className="rounded-lg border bg-background p-2 text-sm shadow-sm">
+      <div className="rounded-lg border bg-background p-2 text-lg shadow-sm">
         <div className="font-bold">{label}</div>
         <div>
           <span className="font-medium">측정값:</span> {data.value.toFixed(2)}
@@ -104,12 +104,12 @@ const DualSideChart = ({
       </div>
 
       <div className="h-full flex flex-col items-center justify-center w-20 px-2">
-        <span className="text-xs text-muted-foreground">중앙값</span>
-        <span className="font-bold text-sm text-foreground">
+        <span className="text-base text-muted-foreground">중앙값</span>
+        <span className="font-bold text-lg text-foreground">
           {medianInfo.label}
         </span>
         <Separator className="my-1 w-3/4" />
-        <span className="font-bold text-sm text-foreground">
+        <span className="font-bold text-lg text-foreground">
           {medianInfo.value.toFixed(2)}
         </span>
       </div>
@@ -166,7 +166,13 @@ export default function TemperatureDeviationChart() {
 
     const tempsWithLabels = tempKeys
       .map((k) => ({ label: k, value: Number(record[k]) }))
-      .sort((a, b) => a.value - b.value);
+      .sort((a, b) => {
+        // Stable sort: if values are equal, sort by label for deterministic results
+        if (a.value === b.value) {
+          return a.label.localeCompare(b.label);
+        }
+        return a.value - b.value;
+      });
 
     const medianIndex = Math.floor(tempsWithLabels.length / 2);
     const medianItem = tempsWithLabels[medianIndex];

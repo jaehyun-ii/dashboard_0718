@@ -165,7 +165,7 @@ export default function PressureChart() {
                   size="sm"
                   onClick={() => setBand(tab.value)}
                   className={cn(
-                    "text-xs font-medium transition-all duration-200",
+                    "text-base font-medium transition-all duration-200",
                     band === tab.value
                       ? "bg-white shadow-sm text-slate-900"
                       : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
@@ -178,7 +178,7 @@ export default function PressureChart() {
 
             {/* CAN Selector */}
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-slate-700">
+              <span className="text-lg font-medium text-slate-700">
                 CAN 선택:
               </span>
               <Select
@@ -205,7 +205,7 @@ export default function PressureChart() {
             <div className="h-[300px] flex items-center justify-center">
               <div className="flex items-center gap-2 text-slate-500">
                 <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin"></div>
-                <span className="text-sm">데이터 로딩 중...</span>
+                <span className="text-lg">데이터 로딩 중...</span>
               </div>
             </div>
           ) : (

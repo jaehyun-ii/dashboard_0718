@@ -36,6 +36,20 @@ export interface Blowchart {
   [key: string]: number;
 }
 
+// Seeded random number generator for consistent SSR/CSR
+class SeededRandom {
+  private seed: number;
+
+  constructor(seed: number) {
+    this.seed = seed;
+  }
+
+  next(): number {
+    this.seed = (this.seed * 9301 + 49297) % 233280;
+    return this.seed / 233280;
+  }
+}
+
 const fmt = (d: Date) => d.toISOString().slice(0, 10);
 const turbines = ["Turbine A", "Turbine B", "Turbine C", "Turbine D"];
 const colors = [
@@ -49,44 +63,48 @@ const dates = Array.from({ length: 90 }, (_, i) => {
   return fmt(d);
 });
 
-const makeVars = (cycle: string): VariableInfo[] => [
-  { name: "압축기", value: "", status: "healthy", group: "연소" },
-  {
-    name: "연료공급",
-    value: "",
-    status: Math.random() > 0.2 ? "healthy" : "critical",
-    group: "연소",
-  },
-  { name: "연소기", value: "", status: "healthy", group: "연소" },
-  { name: "배기가스", value: "", status: "warning", group: "연소" },
-  {
-    name: "축 진동",
-    value: "",
-    status: Math.random() > 0.3 ? "healthy" : "warning",
-    group: "진동",
-  },
-  { name: "베어링 진동", value: "", status: "healthy", group: "진동" },
-  { name: "메탈 온도", value: "", status: "healthy", group: "진동" },
-  { name: "윤활 제어", value: "", status: "healthy", group: "진동" },
-  { name: "발전기", value: "", status: "healthy", group: "전기" },
-  { name: "차단기", value: "", status: "healthy", group: "전기" },
-  { name: "펌프", value: "", status: "warning", group: "전기" },
-  { name: "스타터", value: "", status: "healthy", group: "전기" },
-  { name: "윤활 펌프", value: "", status: "healthy", group: "단위기기" },
-  { name: "베어링 펌프", value: "", status: "healthy", group: "단위기기" },
-  { name: "유압오일 펌프", value: "", status: "healthy", group: "단위기기" },
-  { name: "씰 펌프", value: "", status: "healthy", group: "단위기기" },
-];
+const makeVars = (cycle: string): VariableInfo[] => {
+  const rng = new SeededRandom(parseInt(cycle) || 1);
+  return [
+    { name: "압축기", value: "", status: "healthy", group: "연소" },
+    {
+      name: "연료공급",
+      value: "",
+      status: rng.next() > 0.2 ? "healthy" : "critical",
+      group: "연소",
+    },
+    { name: "연소기", value: "", status: "healthy", group: "연소" },
+    { name: "배기가스", value: "", status: "warning", group: "연소" },
+    {
+      name: "축 진동",
+      value: "",
+      status: rng.next() > 0.3 ? "healthy" : "warning",
+      group: "진동",
+    },
+    { name: "베어링 진동", value: "", status: "healthy", group: "진동" },
+    { name: "메탈 온도", value: "", status: "healthy", group: "진동" },
+    { name: "윤활 제어", value: "", status: "healthy", group: "진동" },
+    { name: "발전기", value: "", status: "healthy", group: "전기" },
+    { name: "차단기", value: "", status: "healthy", group: "전기" },
+    { name: "펌프", value: "", status: "warning", group: "전기" },
+    { name: "스타터", value: "", status: "healthy", group: "전기" },
+    { name: "윤활 펌프", value: "", status: "healthy", group: "단위기기" },
+    { name: "베어링 펌프", value: "", status: "healthy", group: "단위기기" },
+    { name: "유압오일 펌프", value: "", status: "healthy", group: "단위기기" },
+    { name: "씰 펌프", value: "", status: "healthy", group: "단위기기" },
+  ];
+};
 
-const makeCycles = (n: number): CycleInfo[] =>
-  Array.from({ length: n }, (_, i) => {
-    const date = dates[Math.floor(Math.random() * dates.length)];
-    const start = Math.floor(Math.random() * 10) * 2;
-    const dur = (Math.floor(Math.random() * 4) + 2) * 2;
+const makeCycles = (n: number): CycleInfo[] => {
+  const rng = new SeededRandom(12345); // Fixed seed for consistency
+  return Array.from({ length: n }, (_, i) => {
+    const date = dates[Math.floor(rng.next() * dates.length)];
+    const start = Math.floor(rng.next() * 10) * 2;
+    const dur = (Math.floor(rng.next() * 4) + 2) * 2;
     return {
       id: `cycle${i + 1}`,
       name: `Cycle ${i + 1}`,
-      turbine: turbines[Math.floor(Math.random() * turbines.length)],
+      turbine: turbines[Math.floor(rng.next() * turbines.length)],
       date,
       start,
       end: Math.min(start + dur, 24),
@@ -94,6 +112,7 @@ const makeCycles = (n: number): CycleInfo[] =>
       variables: makeVars(`${i + 1}`),
     };
   });
+};
 
 export const timelineData = {
   dates,

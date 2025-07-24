@@ -280,7 +280,7 @@ export default function ReportsPage() {
   return (
     <div className="p-4 md:p-8 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <h1 className="text-2xl font-bold">종합 점검 보고서</h1>
+        <h1 className="text-4xl font-bold">종합 점검 보고서</h1>
         <div className="flex items-center gap-2">
           <Select value={plant} onValueChange={setPlant}>
             <SelectTrigger className="w-[120px]">

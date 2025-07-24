@@ -36,20 +36,20 @@ export function Sidebar() {
         {/* Header */}
         <div className="flex items-center gap-3 p-6 border-b border-slate-700/50">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-            <span className="text-white font-bold text-lg">L</span>
+            <span className="text-white font-bold text-2xl">L</span>
           </div>
-          <span className="font-bold text-xl bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          <span className="font-bold text-4xl bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
             대시보드
           </span>
         </div>
 
         {/* Menu Items */}
-        <nav className="p-4 space-y-2">
+        <nav className="p-4 space-y-3">
           {menuItems.map((item) => (
             <button
               key={item.id}
               onClick={() => handleMenuClick(item.id)}
-              className={`w-full flex items-center gap-4 p-4 rounded-xl cursor-pointer transition-all duration-200 group ${
+              className={`w-full flex items-center gap-4 p-5 rounded-xl cursor-pointer transition-all duration-200 group ${
                 activeMenuItem === item.id
                   ? "bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg shadow-blue-500/25 scale-105"
                   : "hover:bg-slate-700/50 hover:scale-105"
@@ -64,7 +64,7 @@ export function Sidebar() {
                 } transition-colors`}
               />
               <span
-                className={`text-sm font-medium ${
+                className={`text-xl font-medium ${
                   activeMenuItem === item.id
                     ? "text-white"
                     : "text-slate-300 group-hover:text-white"

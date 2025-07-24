@@ -10,7 +10,7 @@ import {
   Zap,
   Cpu,
 } from "lucide-react";
-import { useDashboardStore } from "@/lib/store";
+import { useUIStore } from "@/lib/stores";
 import { SwirlChart } from "./swirl-chart";
 import TemperatureDeviationChart from "./temperature-deviation-chart";
 import BlowGraph from "./blow-graph";
@@ -76,7 +76,7 @@ const groupDisplayData = {
 };
 
 export function ChartsSection() {
-  const { selectedVariableGroup } = useDashboardStore();
+  const { selectedVariableGroup } = useUIStore();
 
   const handleChartClick = (chart: any) => {
     alert(`Opening ${chart.title} for ${selectedVariableGroup} group.`);
@@ -97,7 +97,7 @@ export function ChartsSection() {
             <GroupIcon size={24} className="text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800">
+            <h2 className="text-4xl font-bold text-slate-800">
               {displayData.title}
             </h2>
             <p className="text-slate-600">{displayData.description}</p>
@@ -121,12 +121,12 @@ export function ChartsSection() {
                 <chart.icon size={28} className="text-white" />
               </div>
               <div className="text-right">
-                <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                <div className="text-base font-medium text-slate-500 uppercase tracking-wide">
                   {chart.type}
                 </div>
               </div>
             </div>
-            <h3 className="text-xl font-bold text-slate-800 mb-8 ">
+            <h3 className="text-3xl font-bold text-slate-800 mb-8 ">
               {chart.title}
             </h3>
             {chart.title === "배기 온도" ? (

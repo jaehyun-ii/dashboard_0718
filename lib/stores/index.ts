@@ -9,38 +9,56 @@ export const useCombinedStore = () => {
   const data = useDataStore();
 
   useEffect(() => {
-    const unsubscribeTimeline = useTimelineStore.subscribe(
-      (state) => state.selectedCycle,
-      (selectedCycle) => {
-        if (selectedCycle) {
-          ui.setSelectedCycleInfo(selectedCycle);
+    let prevTimelineSelectedCycle = useTimelineStore.getState().selectedCycle;
+    let prevUISelectedCycleInfo = useUIStore.getState().selectedCycleInfo;
+    let prevDataCycles = useDataStore.getState().cycles;
+
+    const unsubscribeTimeline = useTimelineStore.subscribe((state) => {
+      const currentSelectedCycle = state.selectedCycle;
+      if (currentSelectedCycle !== prevTimelineSelectedCycle) {
+        prevTimelineSelectedCycle = currentSelectedCycle;
+        if (currentSelectedCycle) {
+          useUIStore.getState().setSelectedCycleInfo(currentSelectedCycle);
         }
       }
-    );
+    });
 
-    const unsubscribeUI = useUIStore.subscribe(
-      (state) => state.selectedCycleInfo,
-      (selectedCycleInfo) => {
-        if (selectedCycleInfo && selectedCycleInfo.id !== timeline.selectedCycle?.id) {
-          timeline.setSelectedCycle(selectedCycleInfo);
-          timeline.navigateToDateTime(selectedCycleInfo.date, selectedCycleInfo.start);
+    const unsubscribeUI = useUIStore.subscribe((state) => {
+      const currentSelectedCycleInfo = state.selectedCycleInfo;
+      if (currentSelectedCycleInfo !== prevUISelectedCycleInfo) {
+        prevUISelectedCycleInfo = currentSelectedCycleInfo;
+        const currentTimeline = useTimelineStore.getState();
+        if (
+          currentSelectedCycleInfo &&
+          currentSelectedCycleInfo.id !== currentTimeline.selectedCycle?.id
+        ) {
+          currentTimeline.setSelectedCycle(currentSelectedCycleInfo);
+          currentTimeline.navigateToDateTime(
+            currentSelectedCycleInfo.date,
+            currentSelectedCycleInfo.start
+          );
         }
       }
-    );
+    });
 
-    const unsubscribeData = useDataStore.subscribe(
-      (state) => state.cycles,
-      (cycles) => {
-        const currentSelected = timeline.selectedCycle;
+    const unsubscribeData = useDataStore.subscribe((state) => {
+      const currentCycles = state.cycles;
+      if (currentCycles !== prevDataCycles) {
+        prevDataCycles = currentCycles;
+        const currentTimeline = useTimelineStore.getState();
+        const currentUI = useUIStore.getState();
+        const currentSelected = currentTimeline.selectedCycle;
         if (currentSelected) {
-          const updatedCycle = cycles.find(c => c.id === currentSelected.id);
+          const updatedCycle = currentCycles.find(
+            (c) => c.id === currentSelected.id
+          );
           if (updatedCycle && updatedCycle !== currentSelected) {
-            timeline.setSelectedCycle(updatedCycle);
-            ui.setSelectedCycleInfo(updatedCycle);
+            currentTimeline.setSelectedCycle(updatedCycle);
+            currentUI.setSelectedCycleInfo(updatedCycle);
           }
         }
       }
-    );
+    });
 
     return () => {
       unsubscribeTimeline();
@@ -61,7 +79,7 @@ export const useStoreActions = () => {
   const ui = useUIStore();
   const data = useDataStore();
 
-  const selectCycle = (cycle: typeof data.cycles[0] | null) => {
+  const selectCycle = (cycle: (typeof data.cycles)[0] | null) => {
     timeline.setSelectedCycle(cycle);
     ui.setSelectedCycleInfo(cycle);
     if (cycle) {
@@ -86,7 +104,7 @@ export const useStoreActions = () => {
     }
   };
 
-  const openCycleDetails = (cycle: typeof data.cycles[0]) => {
+  const openCycleDetails = (cycle: (typeof data.cycles)[0]) => {
     selectCycle(cycle);
     ui.setShowCycleDetails(true);
     ui.openModal("cycleDetails");
@@ -119,28 +137,28 @@ export const useStoreActions = () => {
 
     if (ui.hasActiveFilters()) {
       const { filters } = ui;
-      
+
       if (filters.turbineFilter.length > 0) {
-        filteredCycles = filteredCycles.filter(cycle =>
+        filteredCycles = filteredCycles.filter((cycle) =>
           filters.turbineFilter.includes(cycle.turbine)
         );
       }
-      
+
       if (filters.statusFilter.length > 0) {
-        filteredCycles = filteredCycles.filter(cycle =>
-          cycle.variables.some(variable =>
+        filteredCycles = filteredCycles.filter((cycle) =>
+          cycle.variables.some((variable) =>
             filters.statusFilter.includes(variable.status)
           )
         );
       }
-      
+
       if (filters.dateFilter.enabled) {
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - filters.dateFilter.range);
         const cutoffString = cutoffDate.toISOString().slice(0, 10);
-        
-        filteredCycles = filteredCycles.filter(cycle =>
-          cycle.date >= cutoffString
+
+        filteredCycles = filteredCycles.filter(
+          (cycle) => cycle.date >= cutoffString
         );
       }
     }
@@ -151,9 +169,9 @@ export const useStoreActions = () => {
   const getCurrentWeekData = () => {
     const weekCycles = timeline.getCurrentWeekCycles();
     const filteredCycles = getFilteredCycles();
-    
-    return weekCycles.filter(cycle =>
-      filteredCycles.some(filtered => filtered.id === cycle.id)
+
+    return weekCycles.filter((cycle) =>
+      filteredCycles.some((filtered) => filtered.id === cycle.id)
     );
   };
 
@@ -179,9 +197,10 @@ export const useStoreSelectors = () => {
         cycle: timeline.selectedCycle,
         swirlData: data.getSwirlDataByCycle(timeline.selectedCycle.id),
         variablesByGroup: Object.fromEntries(
-          ["진동", "연소", "전기", "단위기기"].map(group =>
-            [group, data.getVariablesByGroup(timeline.selectedCycle!.id, group as any)]
-          )
+          ["진동", "연소", "전기", "단위기기"].map((group) => [
+            group,
+            data.getVariablesByGroup(timeline.selectedCycle!.id, group as any),
+          ])
         ),
       }
     : null;
@@ -198,7 +217,8 @@ export const useStoreSelectors = () => {
 
   const navigationState = {
     canNavigatePrev: timeline.selectedDateRange.from > data.cycles[0]?.date,
-    canNavigateNext: timeline.selectedDateRange.to < data.cycles[data.cycles.length - 1]?.date,
+    canNavigateNext:
+      timeline.selectedDateRange.to < data.cycles[data.cycles.length - 1]?.date,
     currentWeek: timeline.selectedDateRange,
     timeRange: timeline.getVisibleTimeRange(),
   };

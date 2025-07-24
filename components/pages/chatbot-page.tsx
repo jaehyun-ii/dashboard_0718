@@ -35,7 +35,7 @@ export function ChatbotPage() {
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInputText("");
     setIsLoading(true);
 
@@ -48,34 +48,38 @@ export function ChatbotPage() {
         sender: "bot",
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, botMessage]);
+      setMessages((prev) => [...prev, botMessage]);
       setIsLoading(false);
     }, 1000);
   };
 
   const generateBotResponse = (userInput: string): string => {
     const input = userInput.toLowerCase();
-    
+
     if (input.includes("터빈") || input.includes("turbine")) {
       return "현재 4개의 터빈(A, B, C, D)이 모니터링되고 있습니다. 특정 터빈에 대한 정보가 필요하시면 터빈명을 말씀해 주세요.";
     }
-    
+
     if (input.includes("사이클") || input.includes("cycle")) {
       return "사이클 관련 정보를 확인하실 수 있습니다. 특정 사이클 번호나 날짜를 알려주시면 더 자세한 정보를 제공해드릴 수 있습니다.";
     }
-    
+
     if (input.includes("상태") || input.includes("status")) {
       return "시스템 상태를 확인해드리겠습니다. 대시보드에서 실시간 상태를 모니터링하실 수 있으며, 현재 감지 페이지에서 더 자세한 정보를 확인하실 수 있습니다.";
     }
-    
-    if (input.includes("경고") || input.includes("알람") || input.includes("warning")) {
+
+    if (
+      input.includes("경고") ||
+      input.includes("알람") ||
+      input.includes("warning")
+    ) {
       return "경고 알람은 시스템이 정상 범위를 벗어났을 때 발생합니다. 현재 감지 페이지에서 모든 경고 현황을 확인하실 수 있습니다.";
     }
-    
+
     if (input.includes("보고서") || input.includes("report")) {
       return "보고서 페이지에서 다양한 형태의 분석 보고서를 생성하고 다운로드할 수 있습니다. 일간, 주간, 월간, 분기별 보고서를 제공합니다.";
     }
-    
+
     return "죄송합니다. 해당 질문에 대한 답변을 찾을 수 없습니다. 터빈, 사이클, 상태, 경고, 보고서 등에 대해 질문해 주세요.";
   };
 
@@ -87,13 +91,15 @@ export function ChatbotPage() {
   ];
 
   return (
-    <div className="flex-1 p-6 overflow-hidden flex flex-col">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-slate-800">챗봇</h1>
-        <p className="text-slate-600 mt-2">터빈 모니터링 시스템에 대해 궁금한 것을 물어보세요</p>
+    <div className="flex-1 p-8 overflow-hidden flex flex-col">
+      <div className="mb-8">
+        <h1 className="text-6xl font-bold text-slate-800">챗봇</h1>
+        <p className="text-2xl text-slate-600 mt-3">
+          터빈 모니터링 시스템에 대해 궁금한 것을 물어보세요
+        </p>
       </div>
 
-      <div className="flex-1 flex gap-6 min-h-0">
+      <div className="flex-1 flex gap-8 min-h-0">
         {/* Chat Area */}
         <Card className="flex-1 flex flex-col">
           <CardHeader>
@@ -108,7 +114,9 @@ export function ChatbotPage() {
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+                  className={`flex ${
+                    message.sender === "user" ? "justify-end" : "justify-start"
+                  }`}
                 >
                   <div
                     className={`max-w-[70%] p-3 rounded-lg ${
@@ -123,11 +131,11 @@ export function ChatbotPage() {
                       ) : (
                         <Bot className="w-4 h-4" />
                       )}
-                      <span className="text-xs opacity-70">
+                      <span className="text-lg opacity-70">
                         {message.timestamp.toLocaleTimeString()}
                       </span>
                     </div>
-                    <p className="text-sm">{message.text}</p>
+                    <p className="text-xl">{message.text}</p>
                   </div>
                 </div>
               ))}
@@ -136,7 +144,9 @@ export function ChatbotPage() {
                   <div className="bg-slate-100 text-slate-800 p-3 rounded-lg">
                     <div className="flex items-center gap-2">
                       <Bot className="w-4 h-4" />
-                      <span className="text-sm">응답을 생성하고 있습니다...</span>
+                      <span className="text-xl">
+                        응답을 생성하고 있습니다...
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -152,7 +162,10 @@ export function ChatbotPage() {
                 onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
                 disabled={isLoading}
               />
-              <Button onClick={handleSendMessage} disabled={isLoading || !inputText.trim()}>
+              <Button
+                onClick={handleSendMessage}
+                disabled={isLoading || !inputText.trim()}
+              >
                 <Send className="w-4 h-4" />
               </Button>
             </div>
@@ -179,8 +192,8 @@ export function ChatbotPage() {
             </div>
 
             <div className="mt-6">
-              <h4 className="font-medium mb-2">도움말</h4>
-              <div className="text-sm text-slate-600 space-y-1">
+              <h4 className="font-medium mb-2 text-2xl">도움말</h4>
+              <div className="text-xl text-slate-600 space-y-1">
                 <p>• 터빈 상태 문의</p>
                 <p>• 사이클 정보 조회</p>
                 <p>• 경고 알람 확인</p>

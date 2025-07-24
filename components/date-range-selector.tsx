@@ -1,20 +1,18 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, Calendar, Clock } from "lucide-react";
-import { useDashboardStore } from "@/lib/store";
+import { useTimelineStore, useUIStore } from "@/lib/stores";
 
 const regions = ["신인천", "Region B", "Region C", "Region D"];
 const ccOptions = ["1 CC", "2 CC", "3 CC", "4 CC"];
 
 export function DateRangeSelector() {
-  const {
-    selectedDateRange,
-    selectedRegion,
-    selectedCC,
-    setSelectedRegion,
-    setSelectedCC,
-    navigateDate,
-  } = useDashboardStore();
+  const timeline = useTimelineStore();
+  const ui = useUIStore();
+
+  const { selectedDateRange, navigateDate } = timeline;
+
+  const { selectedRegion, selectedCC, setSelectedRegion, setSelectedCC } = ui;
 
   const handleDateToggle = () => {
     console.log("Date button clicked - opening date picker");
@@ -39,10 +37,10 @@ export function DateRangeSelector() {
           <div className="flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl border border-slate-200 min-w-0">
             <Calendar size={20} className="text-blue-600 flex-shrink-0" />
             <div className="text-center min-w-0">
-              <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+              <div className="text-base font-medium text-slate-500 uppercase tracking-wide">
                 Date Range
               </div>
-              <div className="text-sm md:text-lg font-bold text-slate-800 truncate">
+              <div className="text-lg md:text-2xl font-bold text-slate-800 truncate">
                 {selectedDateRange.from} - {selectedDateRange.to}
               </div>
             </div>
@@ -60,7 +58,7 @@ export function DateRangeSelector() {
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={handleDateToggle}
-            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-blue-500/25 flex items-center gap-2"
+            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl text-lg font-medium transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-blue-500/25 flex items-center gap-2"
           >
             <Calendar size={16} />
             <span className="hidden sm:inline">Date</span>
@@ -68,14 +66,14 @@ export function DateRangeSelector() {
 
           <button
             onClick={handleTimeToggle}
-            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-purple-500/25 flex items-center gap-2"
+            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl text-lg font-medium transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-purple-500/25 flex items-center gap-2"
           >
             <Clock size={16} />
             <span className="hidden sm:inline">Time</span>
           </button>
 
           <select
-            className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-emerald-500/25 border-none outline-none cursor-pointer min-w-0"
+            className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white rounded-xl text-lg font-medium transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-emerald-500/25 border-none outline-none cursor-pointer min-w-0"
             value={selectedRegion}
             onChange={(e) => setSelectedRegion(e.target.value)}
           >
@@ -92,7 +90,7 @@ export function DateRangeSelector() {
           </select>
 
           <select
-            className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-orange-500/25 border-none outline-none cursor-pointer min-w-0"
+            className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white rounded-xl text-lg font-medium transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-orange-500/25 border-none outline-none cursor-pointer min-w-0"
             value={selectedCC}
             onChange={(e) => setSelectedCC(e.target.value)}
           >

@@ -182,10 +182,10 @@ export function OptimizedTimelineView() {
       {/* 타이틀 및 접기/펼치기 버튼 */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold text-slate-800 text-2xl">타임라인 스케줄</h2>
+          <h2 className="font-bold text-slate-800 text-5xl">타임라인 스케줄</h2>
           <button
             onClick={() => setIsTimelineExpanded(!isTimelineExpanded)}
-            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-all duration-200"
+            className="flex items-center gap-2 px-3 py-2 text-xl font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-all duration-200"
           >
             {isTimelineExpanded ? (
               <>
@@ -209,7 +209,7 @@ export function OptimizedTimelineView() {
               <div className="flex items-center gap-2 flex-wrap">
                 {/* 지역 선택 */}
                 <select
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium"
+                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xl font-medium"
                   value={selectedRegion}
                   onChange={(e) => setSelectedRegion(e.target.value)}
                 >
@@ -222,7 +222,7 @@ export function OptimizedTimelineView() {
                 </select>
                 {/* CC 선택 */}
                 <select
-                  className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium"
+                  className="px-4 py-2 bg-orange-600 text-white rounded-lg text-xl font-medium"
                   value={selectedCC}
                   onChange={(e) => setSelectedCC(e.target.value)}
                 >
@@ -266,7 +266,7 @@ export function OptimizedTimelineView() {
                 <select
                   value={selectedTime}
                   onChange={(e) => setSelectedTime(Number(e.target.value))}
-                  className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium"
+                  className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xl font-medium"
                 >
                   {Array.from({ length: 12 }, (_, i) => i * 2).map((hour) => (
                     <option key={hour} value={hour}>
@@ -277,7 +277,7 @@ export function OptimizedTimelineView() {
                 {/* 이동 버튼 */}
                 <button
                   onClick={handleDateTimeNavigation}
-                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-sm"
+                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-xl"
                 >
                   이동
                 </button>
@@ -292,12 +292,12 @@ export function OptimizedTimelineView() {
                     placeholder="ex) 26"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm w-48"
+                    className="pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-xl w-48"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm"
+                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xl"
                 >
                   찾기
                 </button>
@@ -313,7 +313,7 @@ export function OptimizedTimelineView() {
               >
                 <ChevronLeft />
               </Button>
-              <div className="text-sm px-4 py-2 bg-slate-100 border rounded-lg">
+              <div className="text-xl px-4 py-2 bg-slate-100 border rounded-lg">
                 <CalendarIcon className="inline mr-2 text-blue-600" />
                 {formatDateDisplay(selectedDateRange.from)} -{" "}
                 {formatDateDisplay(selectedDateRange.to)}
@@ -339,7 +339,7 @@ export function OptimizedTimelineView() {
               <div className="flex">
                 {/* 터빈 목록 */}
                 <div className="w-32 flex-shrink-0 bg-slate-100 border-r border-slate-200">
-                  <div className="h-12 flex items-center p-2 font-semibold text-slate-700 border-b border-slate-200 text-xs">
+                  <div className="h-12 flex items-center p-2 font-semibold text-slate-700 border-b border-slate-200 text-lg">
                     터빈
                   </div>
                   {timelineData.turbines.map((turbine) => (
@@ -348,7 +348,7 @@ export function OptimizedTimelineView() {
                       className="h-12 flex items-center p-2 font-medium text-slate-700 border-t border-slate-200 bg-white"
                     >
                       <div className="w-2 h-2 rounded-full bg-purple-500 mr-2"></div>
-                      <span className="text-xs truncate">{turbine}</span>
+                      <span className="text-lg truncate">{turbine}</span>
                     </div>
                   ))}
                 </div>
@@ -371,27 +371,27 @@ export function OptimizedTimelineView() {
                   >
                     <div className="flex flex-col">
                       {/* 날짜 헤더 */}
-                      <div className="flex h-6 border-b border-slate-200">
+                      <div className="flex h-8 border-b border-slate-200">
                         {currentWeekDates.map((date) => (
                           <div
                             key={date}
                             className="text-center p-1 font-semibold text-slate-600 border-r border-slate-200 bg-slate-100"
                             style={{ width: `${12 * 100}px` }}
                           >
-                            <div className="text-xs">{date}</div>
+                            <div className="text-lg">{date}</div>
                           </div>
                         ))}
                       </div>
 
                       {/* 시간 헤더 */}
-                      <div className="flex h-6 border-b border-slate-200">
+                      <div className="flex h-8 border-b border-slate-200">
                         {timeGrid.map(({ date, hour }) => (
                           <div
                             key={`${date}-${hour}`}
                             data-time-cell={`${date}-${hour}`} // ✅ 중요!
                             className="w-[100px] flex-shrink-0 text-center p-1 font-semibold text-slate-500 border-r border-slate-200 bg-slate-100"
                           >
-                            <div className="text-xs">{hour}:00</div>
+                            <div className="text-lg">{hour}:00</div>
                           </div>
                         ))}
                       </div>
@@ -431,9 +431,9 @@ export function OptimizedTimelineView() {
                               return (
                                 <div
                                   key={cycle.id}
-                                  className={`absolute top-1/2 -translate-y-1/2 h-8 bg-gradient-to-r ${
+                                  className={`absolute top-1/2 -translate-y-1/2 h-10 bg-gradient-to-r ${
                                     cycle.color
-                                  } rounded-lg flex items-center justify-center text-white font-semibold transition-all duration-200 shadow-md border border-white/20 cursor-pointer ${
+                                  } rounded-lg flex items-center justify-center text-slate-800 font-semibold transition-all duration-200 shadow-md border border-white/20 cursor-pointer ${
                                     isSelected
                                       ? "ring-4 ring-blue-400 ring-opacity-75 scale-105 shadow-2xl z-10"
                                       : "hover:scale-105 hover:shadow-lg"
@@ -446,7 +446,7 @@ export function OptimizedTimelineView() {
                                   title={`${cycle.name}: ${cycle.date} ${cycle.start}:00 - ${cycle.end}:00`}
                                 >
                                   <div className="text-center px-2">
-                                    <div className="text-[13px] font-bold truncate">
+                                    <div className="text-xl font-bold truncate">
                                       {`${cycle.name} (${cycle.start}:00-${cycle.end}:00)`}
                                     </div>
                                   </div>
