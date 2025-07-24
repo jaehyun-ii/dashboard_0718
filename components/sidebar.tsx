@@ -7,7 +7,7 @@ import {
   SidebarIcon,
   TreePine,
 } from "lucide-react"; // Removed ChevronLeft, ChevronRight
-import { useDashboardStore } from "@/lib/store";
+import { useUIStore } from "@/lib/stores";
 
 const menuItems = [
   { id: "dashboard", title: "대시보드", icon: Home },
@@ -18,7 +18,7 @@ const menuItems = [
 
 export function Sidebar() {
   const { sidebarOpen, setSidebarOpen, activeMenuItem, setActiveMenuItem } =
-    useDashboardStore();
+    useUIStore();
 
   const handleMenuClick = (itemId: string) => {
     setActiveMenuItem(itemId);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useDashboardStore } from "@/lib/store"; // ⬅️ 실제 경로에 맞게 수정
+import { useDataStore } from "@/lib/stores";
 /* ------------------------------------------------------------------
   Utility equations used to compute rotation in degrees
 ------------------------------------------------------------------ */
@@ -48,7 +48,7 @@ export function SwirlChart({
   rotation,
   showControls = true,
 }: SwirlChartProps) {
-  const swirl = useDashboardStore((s) => s.getSwirlDataByCycle(cycleId));
+  const swirl = useDataStore((s) => s.getSwirlDataByCycle(cycleId));
   const data = swirl?.[0]?.sensors.map((s) => s.value) ?? DEFAULT_DATA;
 
   const [formula, setFormula] = useState<1 | 2 | 3>(1);

@@ -13,7 +13,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { useDashboardStore } from "@/lib/store";
+import { useDataStore } from "@/lib/stores";
 
 interface TempRecord {
   label: string;
@@ -150,7 +150,7 @@ const DualSideChart = ({
 };
 
 export default function TemperatureDeviationChart() {
-  const swirl = useDashboardStore((s) => s.getSwirlDataByCycle("215"));
+  const swirl = useDataStore((s) => s.getSwirlDataByCycle("215"));
 
   const record = useMemo(() => {
     const sensors = swirl?.[0]?.sensors;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useDashboardStore } from "@/lib/store";
+import { useDataStore } from "@/lib/stores";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import dynamic from "next/dynamic";
 import type { ApexOptions } from "apexcharts";
@@ -8,7 +8,7 @@ import type { ApexOptions } from "apexcharts";
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 export default function BlowChartGraph() {
-  const blowchart = useDashboardStore((s) => s.blowchart);
+  const blowchart = useDataStore((s) => s.blowchart);
 
   const canEntries = Object.entries(blowchart).sort((a, b) => {
     const aNum = parseInt(a[0].replace("can", ""));

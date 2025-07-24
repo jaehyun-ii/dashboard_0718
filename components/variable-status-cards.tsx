@@ -2,9 +2,9 @@
 
 import type React from "react";
 import { useEffect } from "react";
-import { useDashboardStore } from "@/lib/store";
+import { useTimelineStore, useUIStore } from "@/lib/stores";
 import { Vibrate, Flame, Zap, Cpu } from "lucide-react";
-import type { VariableInfo } from "@/lib/store";
+import type { VariableInfo } from "@/lib/data";
 
 const getGroupDetails = (group: string) => {
   switch (group) {
@@ -47,12 +47,13 @@ const getStatusText = (status: string) => {
 };
 
 export function VariableStatusCards() {
+  const timeline = useTimelineStore();
+  const ui = useUIStore();
   const {
-    timeline,
     selectedVariableGroup,
     setSelectedVariableGroup,
     setSelectedVariableInfo,
-  } = useDashboardStore();
+  } = ui;
 
   const handleGroupClick = (groupTitle: string) => {
     setSelectedVariableGroup(groupTitle);

@@ -1,7 +1,8 @@
 "use client";
 
 import type React from "react";
-import { useDashboardStore, timelineData } from "@/lib/store";
+import { useTimelineStore, useUIStore } from "@/lib/stores";
+import { timelineData } from "@/lib/data";
 import { useRef, useState, useEffect } from "react";
 import {
   CalendarIcon,
@@ -38,20 +39,24 @@ const getDatesInRange = (from: string, to: string): string[] => {
 };
 
 export function OptimizedTimelineView() {
+  const timeline = useTimelineStore();
+  const ui = useUIStore();
+
   const {
-    timeline,
-    selectedRegion,
-    selectedCC,
+    selectedCycle,
+    currentDate,
+    currentTime,
+    scrollTo,
+    selectedDateRange,
     setSelectedCycle,
-    setSelectedRegion,
-    setSelectedCC,
     setScrollTo,
     searchAndNavigateToCycle,
     navigateToDateTime,
     navigateToMostRecent,
-    selectedDateRange,
     navigateDate,
-  } = useDashboardStore();
+  } = timeline;
+
+  const { selectedRegion, selectedCC, setSelectedRegion, setSelectedCC } = ui;
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -59,9 +64,9 @@ export function OptimizedTimelineView() {
   const [scrollLeft, setScrollLeft] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    new Date(timeline.currentDate)
+    new Date(currentDate)
   );
-  const [selectedTime, setSelectedTime] = useState(timeline.currentTime);
+  const [selectedTime, setSelectedTime] = useState(currentTime);
   const [isTimelineExpanded, setIsTimelineExpanded] = useState(true);
 
   const currentWeekDates = getDatesInRange(
@@ -121,8 +126,8 @@ export function OptimizedTimelineView() {
   }, [selectedRegion, selectedCC, setSelectedRegion, setSelectedCC]);
 
   useEffect(() => {
-    if (timeline.scrollTo && scrollContainerRef.current) {
-      const { date, time } = timeline.scrollTo;
+    if (scrollTo && scrollContainerRef.current) {
+      const { date, time } = scrollTo;
       const scrollContainer = scrollContainerRef.current;
 
       const timeout = setTimeout(() => {
@@ -151,7 +156,7 @@ export function OptimizedTimelineView() {
 
       return () => clearTimeout(timeout);
     }
-  }, [timeline.scrollTo]);
+  }, [scrollTo, setScrollTo]);
 
   useEffect(() => {
     if (scrollContainerRef.current) {
@@ -161,7 +166,7 @@ export function OptimizedTimelineView() {
 
   useEffect(() => {
     navigateToMostRecent();
-  }, [navigateToMostRecent]);
+  }, []);
 
   const formatDateDisplay = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("ko-KR", {
@@ -421,15 +426,14 @@ export function OptimizedTimelineView() {
                                 (dateIndex * 12 + cycle.start / 2) * 100;
                               const width =
                                 ((cycle.end - cycle.start) / 2) * 100;
-                              const isSelected =
-                                timeline.selectedCycle?.id === cycle.id;
+                              const isSelected = selectedCycle?.id === cycle.id;
 
                               return (
                                 <div
                                   key={cycle.id}
                                   className={`absolute top-1/2 -translate-y-1/2 h-8 bg-gradient-to-r ${
                                     cycle.color
-                                  } rounded-lg flex items-center justify-center text-white text-[11px] font-semibold transition-all duration-200 shadow-md border border-white/20 cursor-pointer ${
+                                  } rounded-lg flex items-center justify-center text-white font-semibold transition-all duration-200 shadow-md border border-white/20 cursor-pointer ${
                                     isSelected
                                       ? "ring-4 ring-blue-400 ring-opacity-75 scale-105 shadow-2xl z-10"
                                       : "hover:scale-105 hover:shadow-lg"
@@ -441,12 +445,9 @@ export function OptimizedTimelineView() {
                                   onClick={() => handleCycleClick(cycle)}
                                   title={`${cycle.name}: ${cycle.date} ${cycle.start}:00 - ${cycle.end}:00`}
                                 >
-                                  <div className="text-center px-1.5">
-                                    <div className="font-bold truncate">
-                                      {cycle.name}
-                                    </div>
-                                    <div className="text-[10px] opacity-90">
-                                      {cycle.start}:00-{cycle.end}:00
+                                  <div className="text-center px-2">
+                                    <div className="text-[13px] font-bold truncate">
+                                      {`${cycle.name} (${cycle.start}:00-${cycle.end}:00)`}
                                     </div>
                                   </div>
                                 </div>

@@ -2,31 +2,39 @@
 
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
-import { OptimizedTimelineView } from "@/components/optimized-timeline-view";
-import { VariableStatusCards } from "@/components/variable-status-cards";
-import { ChartsSection } from "@/components/charts-section";
 import { CycleDetailsModal } from "@/components/cycle-details-modal";
-import { useDashboardStore } from "@/lib/store";
+import { useUIStore } from "@/lib/stores";
+import {
+  DashboardPage,
+  PresentDetectionPage,
+  ReportPage,
+  ChatbotPage,
+} from "@/components/pages";
 
-export default function DashboardPage() {
-  const { sidebarOpen } = useDashboardStore();
+export default function MainPage() {
+  const { activeMenuItem } = useUIStore();
+
+  const renderPage = () => {
+    switch (activeMenuItem) {
+      case "dashboard":
+        return <DashboardPage />;
+      case "present-detection":
+        return <PresentDetectionPage />;
+      case "report":
+        return <ReportPage />;
+      case "chatbot":
+        return <ChatbotPage />;
+      default:
+        return <DashboardPage />;
+    }
+  };
 
   return (
     <div className="flex h-screen bg-gray-50 max-w-full overflow-hidden">
       <Sidebar />
       <div className="flex flex-1 flex-col min-w-0">
         <Topbar />
-        <div className="flex-1 flex flex-col min-h-0">
-          {/* The timeline view should not shrink, allowing the content below to take the remaining space */}
-          <div className="flex-shrink-0">
-            <OptimizedTimelineView />
-          </div>
-          {/* This container will now correctly take up the remaining space and scroll */}
-          <div className="flex-1 p-6 space-y-6 overflow-y-auto py-0">
-            <VariableStatusCards />
-            <ChartsSection />
-          </div>
-        </div>
+        {renderPage()}
       </div>
 
       {/* Modals */}
