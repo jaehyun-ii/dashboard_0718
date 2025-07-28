@@ -25,8 +25,8 @@ export function PresentDetectionPage() {
   return (
     <div className="flex-1 p-8 space-y-8 overflow-y-auto">
       <div className="mb-8">
-        <h1 className="text-6xl font-bold text-slate-800">현재 감지</h1>
-        <p className="text-2xl text-slate-600 mt-3">
+        <h1 className="text-4xl font-bold text-slate-800">현재 감지</h1>
+        <p className="text-xl text-slate-600 mt-3">
           실시간 시스템 상태 및 이상 감지 현황
         </p>
       </div>
@@ -35,12 +35,12 @@ export function PresentDetectionPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-xl font-medium text-slate-600">
+            <CardTitle className="text-lg font-medium text-slate-600">
               전체 변수
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-5xl font-bold text-slate-900">
+            <div className="text-4xl font-bold text-slate-900">
               {healthSummary.total}
             </div>
           </CardContent>
@@ -48,12 +48,12 @@ export function PresentDetectionPage() {
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-xl font-medium text-green-600">
+            <CardTitle className="text-lg font-medium text-green-600">
               정상
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-5xl font-bold text-green-600">
+            <div className="text-4xl font-bold text-green-600">
               {healthSummary.healthy}
             </div>
           </CardContent>
@@ -61,12 +61,12 @@ export function PresentDetectionPage() {
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-xl font-medium text-orange-600">
+            <CardTitle className="text-lg font-medium text-orange-600">
               경고
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-5xl font-bold text-orange-600">
+            <div className="text-4xl font-bold text-orange-600">
               {healthSummary.warning}
             </div>
           </CardContent>
@@ -74,12 +74,12 @@ export function PresentDetectionPage() {
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-xl font-medium text-red-600">
+            <CardTitle className="text-lg font-medium text-red-600">
               위험
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-5xl font-bold text-red-600">
+            <div className="text-4xl font-bold text-red-600">
               {healthSummary.critical}
             </div>
           </CardContent>
@@ -115,17 +115,17 @@ export function PresentDetectionPage() {
                   <div className="flex items-center gap-3">
                     {getStatusIcon(overallStatus)}
                     <div>
-                      <div className="font-medium text-2xl">{cycle.name}</div>
-                      <div className="text-xl text-slate-600">
+                      <div className="font-medium text-xl">{cycle.name}</div>
+                      <div className="text-lg text-slate-600">
                         {cycle.turbine} - {cycle.date}
                       </div>
                     </div>
                   </div>
-                  <div className="text-right text-xl">
+                  <div className="text-right text-lg">
                     <div className="text-slate-600">
                       {cycle.start}:00 - {cycle.end}:00
                     </div>
-                    <div className="text-lg text-slate-500">
+                    <div className="text-base text-slate-500">
                       위험: {criticalCount}, 경고: {warningCount}
                     </div>
                   </div>

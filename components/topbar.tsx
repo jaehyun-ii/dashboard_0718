@@ -23,7 +23,7 @@ export function Topbar() {
         </button>
         <div className="flex items-center gap-3">
           <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-purple-600 rounded-full"></div>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
             대시보드
           </h1>
         </div>
@@ -45,7 +45,7 @@ export function Topbar() {
         </button>
 
         <div className="flex items-center gap-3 px-5 py-3 bg-white rounded-xl shadow-sm border border-slate-200">
-          <span className="text-xl font-medium text-slate-700 hidden sm:block">
+          <span className="text-lg font-medium text-slate-700 hidden sm:block">
             관리자
           </span>
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md">

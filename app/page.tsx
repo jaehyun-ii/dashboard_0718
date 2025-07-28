@@ -3,15 +3,18 @@
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
 import { CycleDetailsModal } from "@/components/cycle-details-modal";
-import { useUIStore } from "@/lib/stores";
+import { useUIStore, useStoreCoordination } from "@/lib/stores";
 import {
   DashboardPage,
   PresentDetectionPage,
-  ReportPage,
   ChatbotPage,
 } from "@/components/pages";
+import ReportsManagementPage from "@/components/pages/reports-management-page";
 
 export default function MainPage() {
+  // Initialize store coordination with proper cleanup
+  useStoreCoordination();
+  
   const { activeMenuItem } = useUIStore();
 
   const renderPage = () => {
@@ -21,7 +24,7 @@ export default function MainPage() {
       case "present-detection":
         return <PresentDetectionPage />;
       case "report":
-        return <ReportPage />;
+        return <ReportsManagementPage />;
       case "chatbot":
         return <ChatbotPage />;
       default:

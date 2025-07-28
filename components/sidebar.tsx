@@ -36,9 +36,9 @@ export function Sidebar() {
         {/* Header */}
         <div className="flex items-center gap-3 p-6 border-b border-slate-700/50">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-            <span className="text-white font-bold text-2xl">L</span>
+            <span className="text-white font-bold text-xl">L</span>
           </div>
-          <span className="font-bold text-4xl bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          <span className="font-bold text-3xl bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
             대시보드
           </span>
         </div>
@@ -64,7 +64,7 @@ export function Sidebar() {
                 } transition-colors`}
               />
               <span
-                className={`text-xl font-medium ${
+                className={`text-lg font-medium ${
                   activeMenuItem === item.id
                     ? "text-white"
                     : "text-slate-300 group-hover:text-white"

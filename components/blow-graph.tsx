@@ -1,85 +1,93 @@
 "use client";
 
+import React, { useMemo } from "react";
 import { useDataStore } from "@/lib/stores";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import dynamic from "next/dynamic";
-import type { ApexOptions } from "apexcharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  type TooltipProps,
+} from "recharts";
 
-const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
+interface BlowchartData {
+  name: string;
+  value: number;
+}
 
-export default function BlowChartGraph() {
+const BlowChartGraph = React.memo(() => {
   const blowchart = useDataStore((s) => s.blowchart);
 
-  const canEntries = Object.entries(blowchart).sort((a, b) => {
-    const aNum = parseInt(a[0].replace("can", ""));
-    const bNum = parseInt(b[0].replace("can", ""));
-    return aNum - bNum;
-  });
+  const chartData = useMemo((): BlowchartData[] => {
+    return Object.entries(blowchart)
+      .sort((a, b) => {
+        const aNum = parseInt(a[0].replace("can", ""));
+        const bNum = parseInt(b[0].replace("can", ""));
+        return aNum - bNum;
+      })
+      .map(([key, value]) => ({
+        name: key.toUpperCase(),
+        value: value,
+      }));
+  }, [blowchart]);
 
-  const categories = canEntries.map(([key]) => key.toUpperCase());
-  const values = canEntries.map(([, value]) => value); // 8자리 값 그대로 사용
-
-  const options: ApexOptions = {
-    chart: {
-      type: "bar",
-      toolbar: { show: false },
-    },
-    dataLabels: {
-      enabled: false, // ✅ 막대 위 텍스트 제거
-    },
-    plotOptions: {
-      bar: {
-        horizontal: false,
-        columnWidth: "50%",
-        borderRadius: 4,
-      },
-    },
-    xaxis: {
-      categories,
-      labels: {
-        rotate: -45,
-        style: {
-          fontSize: "14px",
-          colors: "#475569",
-        },
-      },
-    },
-    yaxis: {
-      title: {
-        text: "Blowout 값",
-        style: { color: "#64748b", fontSize: "16px" },
-      },
-      labels: {
-        style: {
-          colors: "#64748b",
-          fontSize: "14px",
-        },
-        formatter: (val: number) => val.toFixed(4), // ✅ y축 눈금은 4자리
-      },
-    },
-    tooltip: {
-      y: {
-        formatter: (val: number) => val.toFixed(8), // ✅ 툴팁은 8자리
-      },
-    },
-    grid: {
-      borderColor: "#e2e8f0",
-      strokeDashArray: 4,
-    },
-    colors: ["#10b981"],
+  const CustomTooltip = (props: TooltipProps<number, string>) => {
+    const { active, payload, label } = props as any;
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+          <p className="text-sm font-medium text-gray-900">{`${label}`}</p>
+          <p className="text-sm text-gray-600">
+            Blowout: {payload[0].value?.toFixed(8)}
+          </p>
+        </div>
+      );
+    }
+    return null;
   };
 
-  const series = [
-    {
-      name: "Blowout",
-      data: values,
-    },
-  ];
-
   return (
-    <>
-      {" "}
-      <Chart options={options} series={series} type="bar" height={350} />
-    </>
+    <ResponsiveContainer width="100%" height={350}>
+      <BarChart
+        data={chartData}
+        margin={{
+          top: 20,
+          right: 30,
+          left: 20,
+          bottom: 60,
+        }}
+      >
+        <XAxis
+          dataKey="name"
+          angle={-45}
+          textAnchor="end"
+          height={60}
+          tick={{ fontSize: 14, fill: "#475569" }}
+        />
+        <YAxis
+          tick={{ fontSize: 14, fill: "#64748b" }}
+          tickFormatter={(value) => value.toFixed(4)}
+          label={{
+            value: "Blowout 값",
+            angle: -90,
+            position: "insideLeft",
+            style: { textAnchor: "middle", fill: "#64748b", fontSize: 16 },
+          }}
+        />
+        <Tooltip content={<CustomTooltip />} />
+        <Bar
+          dataKey="value"
+          fill="#10b981"
+          radius={[4, 4, 0, 0]}
+          stroke="none"
+        />
+      </BarChart>
+    </ResponsiveContainer>
   );
-}
+});
+
+BlowChartGraph.displayName = "BlowChartGraph";
+
+export default BlowChartGraph;

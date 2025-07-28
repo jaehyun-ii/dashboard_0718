@@ -1,8 +1,11 @@
+export type VariableStatus = "healthy" | "warning" | "critical";
+export type VariableGroup = "진동" | "연소" | "전기" | "단위기기";
+
 export interface VariableInfo {
   name: string;
   value: string;
-  status: "healthy" | "warning" | "critical";
-  group: "진동" | "연소" | "전기" | "단위기기";
+  status: VariableStatus;
+  group: VariableGroup;
 }
 
 export interface CycleInfo {
@@ -34,6 +37,49 @@ export interface SwirlDataEntry {
 
 export interface Blowchart {
   [key: string]: number;
+}
+
+export interface ChartInfo {
+  title: string;
+  type: string;
+  icon: any;
+}
+
+export interface TimelineClickEvent {
+  cycle: CycleInfo;
+  event: React.MouseEvent;
+}
+
+export interface ChartClickEvent {
+  chart: ChartInfo;
+  event: React.MouseEvent;
+}
+
+export interface HealthSummary {
+  total: number;
+  healthy: number;
+  warning: number;
+  critical: number;
+}
+
+export interface CycleAnalysisData {
+  totalCycles: number;
+  avgDuration: string;
+}
+
+export interface TurbinePerformanceData {
+  turbineCount: number;
+  efficiency: string;
+}
+
+export type ReportData = HealthSummary | CycleAnalysisData | TurbinePerformanceData;
+
+export interface Report {
+  id: string;
+  title: string;
+  description: string;
+  icon: any;
+  data: ReportData;
 }
 
 // Seeded random number generator for consistent SSR/CSR

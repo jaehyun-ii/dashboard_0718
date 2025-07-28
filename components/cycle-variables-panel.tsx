@@ -3,16 +3,18 @@
 import type React from "react";
 
 import { Activity, Thermometer, Zap, Gauge } from "lucide-react";
-import type { VariableInfo } from "@/lib/store";
+import type { VariableInfo } from "@/lib/data";
 
 const getVariableIcon = (group: string) => {
   switch (group) {
-    case "pressure":
-      return Gauge;
-    case "temperature":
+    case "진동":
+      return Activity;
+    case "연소":
       return Thermometer;
-    case "electric":
+    case "전기":
       return Zap;
+    case "단위기기":
+      return Gauge;
     default:
       return Activity;
   }
@@ -44,7 +46,7 @@ export function CycleVariablesPanel({
 
   return (
     <div className="mt-4 p-4 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl border border-slate-200">
-      <h4 className="text-lg font-semibold text-slate-700 mb-3 flex items-center gap-2">
+      <h4 className="text-base font-semibold text-slate-700 mb-3 flex items-center gap-2">
         <Activity size={16} className="text-blue-600" />
         System Variables ({variables.length})
       </h4>
@@ -64,10 +66,10 @@ export function CycleVariablesPanel({
               </div>
 
               <div className="flex-1 min-w-0">
-                <div className="text-lg font-medium text-slate-800 truncate">
+                <div className="text-base font-medium text-slate-800 truncate">
                   {variable.name}
                 </div>
-                <div className="text-base text-slate-600">{variable.value}</div>
+                <div className="text-sm text-slate-600">{variable.value}</div>
               </div>
 
               <div

@@ -1,39 +1,56 @@
+import React from "react";
 import { useTimelineStore } from "./timeline-store";
 import { useUIStore } from "./ui-store";
 import { useDataStore } from "./data-store";
-import { useEffect } from "react";
+import { useReportsStore } from "./reports-store";
+import { CycleInfo, VariableInfo } from "../data";
 
-export const useCombinedStore = () => {
-  const timeline = useTimelineStore();
-  const ui = useUIStore();
-  const data = useDataStore();
+// Store coordination manager - handles inter-store communication
+class StoreCoordinator {
+  public subscriptions: (() => void)[] = [];
+  public isInitialized = false;
 
-  useEffect(() => {
-    let prevTimelineSelectedCycle = useTimelineStore.getState().selectedCycle;
-    let prevUISelectedCycleInfo = useUIStore.getState().selectedCycleInfo;
-    let prevDataCycles = useDataStore.getState().cycles;
+  private prevState = {
+    timelineSelectedCycle: null as CycleInfo | null,
+    uiSelectedCycleInfo: null as CycleInfo | null,
+    dataCycles: [] as CycleInfo[],
+  };
 
+  initialize() {
+    if (this.isInitialized) return;
+    this.isInitialized = true;
+
+    // Initialize previous state
+    this.prevState.timelineSelectedCycle = useTimelineStore.getState().selectedCycle;
+    this.prevState.uiSelectedCycleInfo = useUIStore.getState().selectedCycleInfo;
+    this.prevState.dataCycles = useDataStore.getState().cycles;
+
+    // Timeline -> UI synchronization
     const unsubscribeTimeline = useTimelineStore.subscribe((state) => {
       const currentSelectedCycle = state.selectedCycle;
-      if (currentSelectedCycle !== prevTimelineSelectedCycle) {
-        prevTimelineSelectedCycle = currentSelectedCycle;
+      if (currentSelectedCycle !== this.prevState.timelineSelectedCycle) {
+        this.prevState.timelineSelectedCycle = currentSelectedCycle;
         if (currentSelectedCycle) {
-          useUIStore.getState().setSelectedCycleInfo(currentSelectedCycle);
+          const uiState = useUIStore.getState();
+          if (uiState.selectedCycleInfo?.id !== currentSelectedCycle.id) {
+            uiState.setSelectedCycleInfo(currentSelectedCycle);
+          }
         }
       }
     });
 
+    // UI -> Timeline synchronization
     const unsubscribeUI = useUIStore.subscribe((state) => {
       const currentSelectedCycleInfo = state.selectedCycleInfo;
-      if (currentSelectedCycleInfo !== prevUISelectedCycleInfo) {
-        prevUISelectedCycleInfo = currentSelectedCycleInfo;
-        const currentTimeline = useTimelineStore.getState();
+      if (currentSelectedCycleInfo !== this.prevState.uiSelectedCycleInfo) {
+        this.prevState.uiSelectedCycleInfo = currentSelectedCycleInfo;
+        const timelineState = useTimelineStore.getState();
         if (
           currentSelectedCycleInfo &&
-          currentSelectedCycleInfo.id !== currentTimeline.selectedCycle?.id
+          currentSelectedCycleInfo.id !== timelineState.selectedCycle?.id
         ) {
-          currentTimeline.setSelectedCycle(currentSelectedCycleInfo);
-          currentTimeline.navigateToDateTime(
+          timelineState.setSelectedCycle(currentSelectedCycleInfo);
+          timelineState.navigateToDateTime(
             currentSelectedCycleInfo.date,
             currentSelectedCycleInfo.start
           );
@@ -41,102 +58,151 @@ export const useCombinedStore = () => {
       }
     });
 
+    // Data -> Timeline/UI synchronization  
     const unsubscribeData = useDataStore.subscribe((state) => {
       const currentCycles = state.cycles;
-      if (currentCycles !== prevDataCycles) {
-        prevDataCycles = currentCycles;
-        const currentTimeline = useTimelineStore.getState();
-        const currentUI = useUIStore.getState();
-        const currentSelected = currentTimeline.selectedCycle;
+      if (currentCycles !== this.prevState.dataCycles) {
+        this.prevState.dataCycles = currentCycles;
+        const timelineState = useTimelineStore.getState();
+        const uiState = useUIStore.getState();
+        const currentSelected = timelineState.selectedCycle;
+        
         if (currentSelected) {
-          const updatedCycle = currentCycles.find(
-            (c) => c.id === currentSelected.id
-          );
+          const updatedCycle = currentCycles.find(c => c.id === currentSelected.id);
           if (updatedCycle && updatedCycle !== currentSelected) {
-            currentTimeline.setSelectedCycle(updatedCycle);
-            currentUI.setSelectedCycleInfo(updatedCycle);
+            timelineState.setSelectedCycle(updatedCycle);
+            uiState.setSelectedCycleInfo(updatedCycle);
           }
         }
       }
     });
 
+    this.subscriptions.push(unsubscribeTimeline, unsubscribeUI, unsubscribeData);
+  }
+
+  destroy() {
+    this.subscriptions.forEach(unsubscribe => unsubscribe());
+    this.subscriptions = [];
+    this.isInitialized = false;
+    // Clear references to prevent memory leaks
+    this.prevState = {
+      timelineSelectedCycle: null,
+      uiSelectedCycleInfo: null,
+      dataCycles: [],
+    };
+  }
+}
+
+// Global coordinator instance
+let storeCoordinator: StoreCoordinator | null = null;
+
+// Initialize store coordination (call once in app)
+export const initializeStoreCoordination = () => {
+  if (!storeCoordinator) {
+    storeCoordinator = new StoreCoordinator();
+  }
+  storeCoordinator.initialize();
+  return storeCoordinator;
+};
+
+// Cleanup store coordination
+export const destroyStoreCoordination = () => {
+  if (storeCoordinator) {
+    storeCoordinator.destroy();
+    storeCoordinator = null;
+  }
+};
+
+// Hook for initializing store coordination with proper cleanup
+export const useStoreCoordination = () => {
+  React.useEffect(() => {
+    const coordinator = initializeStoreCoordination();
+    
+    // Development-only: Add window cleanup for hot reload
+    if (process.env.NODE_ENV === 'development') {
+      (window as any).__destroyStoreCoordination = destroyStoreCoordination;
+    }
+    
     return () => {
-      unsubscribeTimeline();
-      unsubscribeUI();
-      unsubscribeData();
+      // Cleanup when component unmounts
+      destroyStoreCoordination();
     };
   }, []);
+};
 
+// Development helper to check for memory leaks
+export const getStoreCoordinationStatus = () => {
   return {
-    timeline,
-    ui,
-    data,
+    isInitialized: storeCoordinator?.isInitialized ?? false,
+    subscriptionCount: storeCoordinator?.subscriptions.length ?? 0,
+  };
+};
+
+// Simple hook that just returns the stores without coordination logic
+export const useStores = () => {
+  return {
+    timeline: useTimelineStore(),
+    ui: useUIStore(),
+    data: useDataStore(),
+    reports: useReportsStore(),
   };
 };
 
 export const useStoreActions = () => {
-  const timeline = useTimelineStore();
-  const ui = useUIStore();
-  const data = useDataStore();
+  const stores = useStores();
 
-  const selectCycle = (cycle: (typeof data.cycles)[0] | null) => {
-    timeline.setSelectedCycle(cycle);
-    ui.setSelectedCycleInfo(cycle);
+  const selectCycle = (cycle: CycleInfo | null) => {
+    // Store coordination will handle synchronization automatically
+    stores.timeline.setSelectedCycle(cycle);
     if (cycle) {
-      timeline.navigateToDateTime(cycle.date, cycle.start);
+      stores.timeline.navigateToDateTime(cycle.date, cycle.start);
     }
   };
 
   const navigateToMostRecentCycle = () => {
-    const recentCycles = data.getRecentCycles(1);
+    const recentCycles = stores.data.getRecentCycles(1);
     if (recentCycles.length > 0) {
       selectCycle(recentCycles[0]);
     }
-    timeline.navigateToMostRecent();
+    stores.timeline.navigateToMostRecent();
   };
 
   const searchAndNavigate = (query: string) => {
-    const foundCycles = data.searchCycles(query);
+    const foundCycles = stores.data.searchCycles(query);
     if (foundCycles.length > 0) {
       selectCycle(foundCycles[0]);
     } else {
-      timeline.searchAndNavigateToCycle(query);
+      stores.timeline.searchAndNavigateToCycle(query);
     }
   };
 
-  const openCycleDetails = (cycle: (typeof data.cycles)[0]) => {
+  const openCycleDetails = (cycle: CycleInfo) => {
     selectCycle(cycle);
-    ui.setShowCycleDetails(true);
-    ui.openModal("cycleDetails");
+    stores.ui.setShowCycleDetails(true);
+    stores.ui.openModal("cycleDetails");
   };
 
   const refreshAllData = async () => {
-    data.setLoading(true);
+    stores.data.setLoading(true);
     try {
-      await data.refreshData();
-      const currentCycle = timeline.selectedCycle;
-      if (currentCycle) {
-        const updatedCycle = data.getCycleById(currentCycle.id);
-        if (updatedCycle) {
-          selectCycle(updatedCycle);
-        }
-      }
+      await stores.data.refreshData();
+      // Store coordination will handle synchronization automatically
     } finally {
-      data.setLoading(false);
+      stores.data.setLoading(false);
     }
   };
 
   const resetAllStores = () => {
-    timeline.resetTimeline();
-    ui.resetUIState();
-    data.resetData();
+    stores.timeline.resetTimeline();
+    stores.ui.resetUIState();
+    stores.data.resetData();
   };
 
   const getFilteredCycles = () => {
-    let filteredCycles = data.cycles;
+    let filteredCycles = stores.data.cycles;
 
-    if (ui.hasActiveFilters()) {
-      const { filters } = ui;
+    if (stores.ui.hasActiveFilters()) {
+      const { filters } = stores.ui;
 
       if (filters.turbineFilter.length > 0) {
         filteredCycles = filteredCycles.filter((cycle) =>
@@ -167,7 +233,7 @@ export const useStoreActions = () => {
   };
 
   const getCurrentWeekData = () => {
-    const weekCycles = timeline.getCurrentWeekCycles();
+    const weekCycles = stores.timeline.getCurrentWeekCycles();
     const filteredCycles = getFilteredCycles();
 
     return weekCycles.filter((cycle) =>
@@ -188,52 +254,49 @@ export const useStoreActions = () => {
 };
 
 export const useStoreSelectors = () => {
-  const timeline = useTimelineStore();
-  const ui = useUIStore();
-  const data = useDataStore();
+  const stores = useStores();
 
-  const selectedCycleData = timeline.selectedCycle
+  const selectedCycleData = stores.timeline.selectedCycle
     ? {
-        cycle: timeline.selectedCycle,
-        swirlData: data.getSwirlDataByCycle(timeline.selectedCycle.id),
+        cycle: stores.timeline.selectedCycle,
+        swirlData: stores.data.getSwirlDataByCycle(stores.timeline.selectedCycle.id),
         variablesByGroup: Object.fromEntries(
-          ["진동", "연소", "전기", "단위기기"].map((group) => [
+          (["진동", "연소", "전기", "단위기기"] as const).map((group) => [
             group,
-            data.getVariablesByGroup(timeline.selectedCycle!.id, group as any),
+            stores.data.getVariablesByGroup(stores.timeline.selectedCycle!.id, group),
           ])
         ),
       }
     : null;
 
   const dashboardSummary = {
-    totalCycles: data.cycles.length,
-    healthSummary: data.getHealthySummary(),
-    recentCycles: data.getRecentCycles(5),
-    currentWeekCycles: timeline.getCurrentWeekCycles(),
-    hasActiveFilters: ui.hasActiveFilters(),
-    isLoading: data.isLoading,
-    lastUpdated: new Date(data.lastUpdated).toLocaleString(),
+    totalCycles: stores.data.cycles.length,
+    healthSummary: stores.data.getHealthySummary(),
+    recentCycles: stores.data.getRecentCycles(5),
+    currentWeekCycles: stores.timeline.getCurrentWeekCycles(),
+    hasActiveFilters: stores.ui.hasActiveFilters(),
+    isLoading: stores.data.isLoading,
+    lastUpdated: new Date(stores.data.lastUpdated).toLocaleString(),
   };
 
   const navigationState = {
-    canNavigatePrev: timeline.selectedDateRange.from > data.cycles[0]?.date,
+    canNavigatePrev: stores.timeline.selectedDateRange.from > stores.data.cycles[0]?.date,
     canNavigateNext:
-      timeline.selectedDateRange.to < data.cycles[data.cycles.length - 1]?.date,
-    currentWeek: timeline.selectedDateRange,
-    timeRange: timeline.getVisibleTimeRange(),
+      stores.timeline.selectedDateRange.to < stores.data.cycles[stores.data.cycles.length - 1]?.date,
+    currentWeek: stores.timeline.selectedDateRange,
+    timeRange: stores.timeline.getVisibleTimeRange(),
   };
 
   return {
     selectedCycleData,
     dashboardSummary,
     navigationState,
-    timeline,
-    ui,
-    data,
+    ...stores,
   };
 };
 
 export * from "./timeline-store";
 export * from "./ui-store";
 export * from "./data-store";
+export * from "./reports-store";
 export * from "./middleware";

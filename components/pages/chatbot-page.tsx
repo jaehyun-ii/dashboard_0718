@@ -93,8 +93,8 @@ export function ChatbotPage() {
   return (
     <div className="flex-1 p-8 overflow-hidden flex flex-col">
       <div className="mb-8">
-        <h1 className="text-6xl font-bold text-slate-800">챗봇</h1>
-        <p className="text-2xl text-slate-600 mt-3">
+        <h1 className="text-4xl font-bold text-slate-800">챗봇</h1>
+        <p className="text-xl text-slate-600 mt-3">
           터빈 모니터링 시스템에 대해 궁금한 것을 물어보세요
         </p>
       </div>
@@ -131,11 +131,11 @@ export function ChatbotPage() {
                       ) : (
                         <Bot className="w-4 h-4" />
                       )}
-                      <span className="text-lg opacity-70">
+                      <span className="text-base opacity-70">
                         {message.timestamp.toLocaleTimeString()}
                       </span>
                     </div>
-                    <p className="text-xl">{message.text}</p>
+                    <p className="text-lg">{message.text}</p>
                   </div>
                 </div>
               ))}
@@ -144,7 +144,7 @@ export function ChatbotPage() {
                   <div className="bg-slate-100 text-slate-800 p-3 rounded-lg">
                     <div className="flex items-center gap-2">
                       <Bot className="w-4 h-4" />
-                      <span className="text-xl">
+                      <span className="text-lg">
                         응답을 생성하고 있습니다...
                       </span>
                     </div>
@@ -192,8 +192,8 @@ export function ChatbotPage() {
             </div>
 
             <div className="mt-6">
-              <h4 className="font-medium mb-2 text-2xl">도움말</h4>
-              <div className="text-xl text-slate-600 space-y-1">
+              <h4 className="font-medium mb-2 text-xl">도움말</h4>
+              <div className="text-lg text-slate-600 space-y-1">
                 <p>• 터빈 상태 문의</p>
                 <p>• 사이클 정보 조회</p>
                 <p>• 경고 알람 확인</p>

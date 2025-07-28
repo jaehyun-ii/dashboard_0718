@@ -18,10 +18,10 @@ export function CycleDetailsModal() {
               <Settings size={24} className="text-white" />
             </div>
             <div>
-              <h3 className="text-5xl font-bold text-slate-800">
+              <h3 className="text-4xl font-bold text-slate-800">
                 Cycle Details
               </h3>
-              <p className="text-2xl text-slate-600">Operational information</p>
+              <p className="text-xl text-slate-600">Operational information</p>
             </div>
           </div>
           <button
@@ -34,45 +34,45 @@ export function CycleDetailsModal() {
 
         <div className="space-y-4 mb-8">
           <div className="flex justify-between items-center p-4 bg-slate-50 rounded-xl">
-            <span className="font-semibold text-slate-700 text-xl">
+            <span className="font-semibold text-slate-700 text-lg">
               Cycle Name:
             </span>
-            <span className="font-bold text-slate-800 text-2xl">
+            <span className="font-bold text-slate-800 text-xl">
               {selectedCycleInfo.name}
             </span>
           </div>
           <div className="flex justify-between items-center p-4 bg-slate-50 rounded-xl">
-            <span className="font-semibold text-slate-700 text-xl">
+            <span className="font-semibold text-slate-700 text-lg">
               Turbine:
             </span>
-            <span className="font-bold text-slate-800 text-2xl">
+            <span className="font-bold text-slate-800 text-xl">
               {selectedCycleInfo.turbine}
             </span>
           </div>
           <div className="flex justify-between items-center p-4 bg-slate-50 rounded-xl">
-            <span className="font-semibold text-slate-700 flex items-center gap-2 text-xl">
+            <span className="font-semibold text-slate-700 flex items-center gap-2 text-lg">
               <Clock size={16} />
               Start Time:
             </span>
-            <span className="font-bold text-slate-800 text-2xl">
+            <span className="font-bold text-slate-800 text-xl">
               {selectedCycleInfo.start}:00
             </span>
           </div>
           <div className="flex justify-between items-center p-4 bg-slate-50 rounded-xl">
-            <span className="font-semibold text-slate-700 text-xl">
+            <span className="font-semibold text-slate-700 text-lg">
               Duration:
             </span>
-            <span className="font-bold text-slate-800 text-2xl">
+            <span className="font-bold text-slate-800 text-xl">
               {selectedCycleInfo.end - selectedCycleInfo.start} hours
             </span>
           </div>
           <div className="flex justify-between items-center p-4 bg-slate-50 rounded-xl">
-            <span className="font-semibold text-slate-700 flex items-center gap-2 text-xl">
+            <span className="font-semibold text-slate-700 flex items-center gap-2 text-lg">
               <AlertCircle size={16} />
               Status:
             </span>
             <span
-              className={`px-4 py-2 rounded-xl font-semibold text-xl ${
+              className={`px-4 py-2 rounded-xl font-semibold text-lg ${
                 selectedCycleInfo.color.includes("blue")
                   ? "bg-blue-100 text-blue-800 border border-blue-200"
                   : "bg-orange-100 text-orange-800 border border-orange-200"
@@ -86,12 +86,12 @@ export function CycleDetailsModal() {
         </div>
 
         <div className="flex gap-4">
-          <button className="flex-1 px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-semibold text-xl shadow-lg hover:shadow-blue-500/25">
+          <button className="flex-1 px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-semibold text-lg shadow-lg hover:shadow-blue-500/25">
             View Detailed Report
           </button>
           <button
             onClick={() => setShowCycleDetails(false)}
-            className="flex-1 px-6 py-4 bg-slate-200 text-slate-800 rounded-xl hover:bg-slate-300 transition-all duration-200 font-semibold text-xl"
+            className="flex-1 px-6 py-4 bg-slate-200 text-slate-800 rounded-xl hover:bg-slate-300 transition-all duration-200 font-semibold text-lg"
           >
             Close
           </button>

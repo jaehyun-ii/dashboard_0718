@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import {
   BarChart,
   Bar,
@@ -32,7 +32,7 @@ const CustomTooltip = (props: TooltipProps<number, string>) => {
   if (active && payload?.length) {
     const data = payload[0].payload as TempRecord;
     return (
-      <div className="rounded-lg border bg-background p-2 text-lg shadow-sm">
+      <div className="rounded-lg border bg-background p-2 text-base shadow-sm">
         <div className="font-bold">{label}</div>
         <div>
           <span className="font-medium">측정값:</span> {data.value.toFixed(2)}
@@ -48,108 +48,116 @@ const CustomTooltip = (props: TooltipProps<number, string>) => {
   return null;
 };
 
-const DualSideChart = ({
-  data,
-  spec,
-  medianInfo,
-}: {
-  data: TempRecord[];
-  spec: number;
-  medianInfo: MedianInfo;
-}) => {
-  const max = Math.max(...data.map((d) => Math.abs(d.diff)), spec);
+const DualSideChart = React.memo(
+  ({
+    data,
+    spec,
+    medianInfo,
+  }: {
+    data: TempRecord[];
+    spec: number;
+    medianInfo: MedianInfo;
+  }) => {
+    const max = Math.max(...data.map((d) => Math.abs(d.diff)), spec);
 
-  const greaterThanMedian = data
-    .filter((d) => d.diff > 0)
-    .sort((a, b) => b.diff - a.diff);
+    const greaterThanMedian = data
+      .filter((d) => d.diff > 0)
+      .sort((a, b) => b.diff - a.diff);
 
-  const lessThanMedian = data
-    .filter((d) => d.diff < 0)
-    .map((d) => ({ ...d, barValue: Math.abs(d.diff) }))
-    .sort((a, b) => (b.barValue ?? 0) - (a.barValue ?? 0));
+    const lessThanMedian = data
+      .filter((d) => d.diff < 0)
+      .map((d) => ({ ...d, barValue: Math.abs(d.diff) }))
+      .sort((a, b) => (b.barValue ?? 0) - (a.barValue ?? 0));
 
-  const maxItems = Math.max(greaterThanMedian.length, lessThanMedian.length);
-  const chartHeight = maxItems * 20;
+    const maxItems = Math.max(greaterThanMedian.length, lessThanMedian.length);
+    const chartHeight = maxItems * 20;
 
-  return (
-    <div
-      className="flex justify-center mt-16"
-      style={{ height: `${chartHeight}px` }}
-    >
-      <div className="flex-1 min-w-0 h-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart layout="vertical" data={lessThanMedian} barCategoryGap={0}>
-            <XAxis type="number" domain={[0, max]} reversed hide />
-            <YAxis
-              type="category"
-              dataKey="label"
-              width={45}
-              tick={{
-                fontSize: 11,
-                fill: "hsl(var(--foreground))",
-                textAnchor: "end",
-              }}
-              axisLine={false}
-              tickLine={false}
-              interval={0}
-            />
-            <Tooltip content={<CustomTooltip />} cursor={false} />
-            <Bar dataKey="barValue" barSize={34} radius={[4, 0, 0, 4]}>
-              {lessThanMedian.map((_, i) => (
-                <Cell key={`cell-${i}`} fill="hsl(var(--primary))" />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+    return (
+      <div
+        className="flex justify-center mt-16"
+        style={{ height: `${chartHeight}px` }}
+      >
+        <div className="flex-1 min-w-0 h-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              layout="vertical"
+              data={lessThanMedian}
+              barCategoryGap={0}
+            >
+              <XAxis type="number" domain={[0, max]} reversed hide />
+              <YAxis
+                type="category"
+                dataKey="label"
+                width={45}
+                tick={{
+                  fontSize: 11,
+                  fill: "hsl(var(--foreground))",
+                  textAnchor: "end",
+                }}
+                axisLine={false}
+                tickLine={false}
+                interval={0}
+              />
+              <Tooltip content={<CustomTooltip />} cursor={false} />
+              <Bar dataKey="barValue" barSize={34} radius={[4, 0, 0, 4]}>
+                {lessThanMedian.map((_, i) => (
+                  <Cell key={`cell-${i}`} fill="hsl(var(--primary))" />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="h-full flex flex-col items-center justify-center w-20 px-2">
+          <span className="text-sm text-muted-foreground">중앙값</span>
+          <span className="font-bold text-base text-foreground">
+            {medianInfo.label}
+          </span>
+          <Separator className="my-1 w-3/4" />
+          <span className="font-bold text-base text-foreground">
+            {medianInfo.value.toFixed(2)}
+          </span>
+        </div>
+
+        <div className="flex-1 min-w-0 h-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              layout="vertical"
+              data={greaterThanMedian}
+              barCategoryGap={0}
+            >
+              <XAxis type="number" domain={[0, max]} hide />
+              <YAxis
+                type="category"
+                dataKey="label"
+                width={45}
+                orientation="right"
+                tick={{
+                  fontSize: 11,
+                  fill: "hsl(var(--foreground))",
+                  textAnchor: "start",
+                }}
+                axisLine={false}
+                tickLine={false}
+                interval={0}
+              />
+              <Tooltip content={<CustomTooltip />} cursor={false} />
+              <Bar dataKey="diff" barSize={34} radius={[0, 4, 4, 0]}>
+                {greaterThanMedian.map((_, i) => (
+                  <Cell key={`cell-${i}`} fill="hsl(var(--destructive))" />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
+    );
+  }
+);
 
-      <div className="h-full flex flex-col items-center justify-center w-20 px-2">
-        <span className="text-base text-muted-foreground">중앙값</span>
-        <span className="font-bold text-lg text-foreground">
-          {medianInfo.label}
-        </span>
-        <Separator className="my-1 w-3/4" />
-        <span className="font-bold text-lg text-foreground">
-          {medianInfo.value.toFixed(2)}
-        </span>
-      </div>
+DualSideChart.displayName = "DualSideChart";
 
-      <div className="flex-1 min-w-0 h-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            layout="vertical"
-            data={greaterThanMedian}
-            barCategoryGap={0}
-          >
-            <XAxis type="number" domain={[0, max]} hide />
-            <YAxis
-              type="category"
-              dataKey="label"
-              width={45}
-              orientation="right"
-              tick={{
-                fontSize: 11,
-                fill: "hsl(var(--foreground))",
-                textAnchor: "start",
-              }}
-              axisLine={false}
-              tickLine={false}
-              interval={0}
-            />
-            <Tooltip content={<CustomTooltip />} cursor={false} />
-            <Bar dataKey="diff" barSize={34} radius={[0, 4, 4, 0]}>
-              {greaterThanMedian.map((_, i) => (
-                <Cell key={`cell-${i}`} fill="hsl(var(--destructive))" />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  );
-};
-
-export default function TemperatureDeviationChart() {
+const TemperatureDeviationChart = React.memo(() => {
   const swirl = useDataStore((s) => s.getSwirlDataByCycle("215"));
 
   const record = useMemo(() => {
@@ -200,4 +208,8 @@ export default function TemperatureDeviationChart() {
       )}
     </>
   );
-}
+});
+
+TemperatureDeviationChart.displayName = "TemperatureDeviationChart";
+
+export default TemperatureDeviationChart;

@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useMemo, useCallback } from "react";
 import {
   BarChart,
   LineChart,
@@ -11,6 +12,7 @@ import {
   Cpu,
 } from "lucide-react";
 import { useUIStore } from "@/lib/stores";
+import { ChartInfo } from "@/lib/data";
 import { SwirlChart } from "./swirl-chart";
 import TemperatureDeviationChart from "./temperature-deviation-chart";
 import BlowGraph from "./blow-graph";
@@ -75,17 +77,49 @@ const groupDisplayData = {
   },
 };
 
-export function ChartsSection() {
+// Memoized chart renderer component
+const ChartRenderer = React.memo(({ title }: { title: string }) => {
+  switch (title) {
+    case "배기 온도":
+      return <SwirlChart showControls={false} cycleId="215" />;
+    case "온도 편차":
+      return <TemperatureDeviationChart />;
+    case "연소 동압":
+      return <BlowGraph />;
+    case "연료 모드":
+      return <ModeChart />;
+    default:
+      return (
+        <div className="h-48 flex items-center justify-center text-gray-500">
+          차트 준비 중...
+        </div>
+      );
+  }
+});
+
+ChartRenderer.displayName = "ChartRenderer";
+
+export const ChartsSection = React.memo(() => {
   const { selectedVariableGroup } = useUIStore();
 
-  const handleChartClick = (chart: any) => {
-    alert(`Opening ${chart.title} for ${selectedVariableGroup} group.`);
-  };
+  const handleChartClick = useCallback(
+    (chart: ChartInfo) => {
+      alert(`Opening ${chart.title} for ${selectedVariableGroup} group.`);
+    },
+    [selectedVariableGroup]
+  );
 
-  const displayData =
-    groupDisplayData[selectedVariableGroup as keyof typeof groupDisplayData] ||
-    groupDisplayData.default;
-  const { icon: GroupIcon, gradient } = displayData;
+  const { displayData, GroupIcon, gradient } = useMemo(() => {
+    const data =
+      groupDisplayData[
+        selectedVariableGroup as keyof typeof groupDisplayData
+      ] || groupDisplayData.default;
+    return {
+      displayData: data,
+      GroupIcon: data.icon,
+      gradient: data.gradient,
+    };
+  }, [selectedVariableGroup]);
 
   return (
     <div className="mt-6">
@@ -97,7 +131,7 @@ export function ChartsSection() {
             <GroupIcon size={24} className="text-white" />
           </div>
           <div>
-            <h2 className="text-4xl font-bold text-slate-800">
+            <h2 className="text-3xl font-bold text-slate-800">
               {displayData.title}
             </h2>
             <p className="text-slate-600">{displayData.description}</p>
@@ -121,29 +155,20 @@ export function ChartsSection() {
                 <chart.icon size={28} className="text-white" />
               </div>
               <div className="text-right">
-                <div className="text-base font-medium text-slate-500 uppercase tracking-wide">
+                <div className="text-sm font-medium text-slate-500 uppercase tracking-wide">
                   {chart.type}
                 </div>
               </div>
             </div>
-            <h3 className="text-3xl font-bold text-slate-800 mb-8 ">
+            <h3 className="text-2xl font-bold text-slate-800 mb-8">
               {chart.title}
             </h3>
-            {chart.title === "배기 온도" ? (
-              <SwirlChart showControls={false} cycleId={"215"} />
-            ) : (
-              <div></div>
-            )}
-            {chart.title === "온도 편차" ? (
-              <TemperatureDeviationChart />
-            ) : (
-              <div></div>
-            )}
-            {chart.title === "연소 동압" ? <BlowGraph /> : <div></div>}
-            {chart.title === "연료 모드" ? <ModeChart /> : <div></div>}
+            <ChartRenderer title={chart.title} />
           </div>
         ))}
       </div>
     </div>
   );
-}
+});
+
+ChartsSection.displayName = "ChartsSection";

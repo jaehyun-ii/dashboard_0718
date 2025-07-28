@@ -29,7 +29,7 @@ export default function ModeChart() {
 
   return (
     <div className="w-full flex justify-center overflow-x-auto">
-      <table className="min-w-[300px] border border-slate-300 text-base text-center">
+      <table className="min-w-[300px] border border-slate-300 text-sm text-center">
         <thead>
           <tr>
             <th className="bg-slate-100 border border-slate-300 px-2 py-1 font-medium text-slate-800">

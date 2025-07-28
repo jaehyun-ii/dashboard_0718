@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,10 +10,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  type TooltipProps,
+} from "recharts";
 import { cn } from "@/lib/utils";
-import type { ApexOptions } from "apexcharts";
-
-const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 interface BandDataItem {
   datetime: string;
@@ -30,6 +36,12 @@ const bandTabs: { label: string; value: BandType }[] = [
   { label: "High", value: "high" },
   { label: "Screech", value: "screech" },
 ];
+
+interface ChartDataItem {
+  time: string;
+  value: number;
+  formattedTime: string;
+}
 
 // Mock API function - replace with your actual API call
 const getBandData = async (
@@ -49,11 +61,19 @@ const getBandData = async (
   return { bandData: mockData };
 };
 
-export default function PressureChart() {
+const PressureChart = React.memo(() => {
   const [data, setData] = useState<BandDataItem[]>([]);
   const [band, setBand] = useState<BandType>("blowout");
   const [can, setCan] = useState(1);
   const [loading, setLoading] = useState(false);
+
+  const handleBandChange = useCallback((newBand: BandType) => {
+    setBand(newBand);
+  }, []);
+
+  const handleCanChange = useCallback((value: string) => {
+    setCan(Number(value));
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -69,87 +89,38 @@ export default function PressureChart() {
       });
   }, [band, can]);
 
-  if (!data.length && !loading) return null;
+  const chartData = useMemo((): ChartDataItem[] => {
+    return data.map((item) => ({
+      time: new Date(item.datetime).getTime().toString(),
+      value: item.value,
+      formattedTime: new Date(item.datetime).toLocaleString("ko-KR", {
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    }));
+  }, [data]);
 
-  const times = data.map((d) => d.datetime);
-  const values = data.map((d) => d.value);
-
-  const series = [
-    {
-      name: `${can}번 CAN - ${band.toUpperCase()}`,
-      data: values,
-    },
-  ];
-
-  const options: ApexOptions = {
-    chart: {
-      id: "pressure-chart",
-      toolbar: { show: true },
-      type: "line",
-      background: "transparent",
-    },
-    xaxis: {
-      categories: times,
-      type: "datetime",
-      labels: {
-        rotate: -45,
-        style: {
-          colors: "#64748b",
-          fontSize: "12px",
-        },
-      },
-    },
-    plotOptions: {
-      bar: { columnWidth: "50%" },
-    },
-    legend: {
-      position: "top",
-      labels: {
-        colors: "#64748b",
-      },
-    },
-    colors: ["#10b981"],
-    grid: {
-      borderColor: "#e2e8f0",
-      strokeDashArray: 3,
-    },
-    yaxis: {
-      title: {
-        text: "압력 (PSI)",
-        style: {
-          color: "#64748b",
-          fontSize: "14px",
-          fontWeight: 500,
-        },
-      },
-      labels: {
-        style: {
-          colors: "#64748b",
-          fontSize: "12px",
-        },
-      },
-    },
-    tooltip: {
-      theme: "light",
-      x: { format: "yyyy-MM-dd HH:mm:ss" },
-      y: {
-        formatter: (val?: number) => (val ?? 0).toFixed(6),
-      },
-    },
-    stroke: {
-      curve: "smooth",
-      width: 2,
-    },
-    markers: {
-      size: 4,
-      colors: ["#10b981"],
-      strokeColors: "#ffffff",
-      strokeWidth: 2,
-      hover: {
-        size: 6,
-      },
-    },
+  const CustomTooltip = (props: TooltipProps<number, string>) => {
+    const { active, payload, label } = props as any;
+    if (active && payload && payload.length) {
+      const data = payload[0];
+      return (
+        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+          <p className="text-sm font-medium text-gray-900">
+            {new Date(Number(label)).toLocaleString("ko-KR")}
+          </p>
+          <p className="text-sm text-gray-600">
+            압력: {data.value?.toFixed(6)} PSI
+          </p>
+        </div>
+      );
+    }
+    return null;
   };
+
+  if (!data.length && !loading) return null;
 
   return (
     <div className="w-full">
@@ -163,9 +134,9 @@ export default function PressureChart() {
                   key={tab.value}
                   variant={band === tab.value ? "default" : "ghost"}
                   size="sm"
-                  onClick={() => setBand(tab.value)}
+                  onClick={() => handleBandChange(tab.value)}
                   className={cn(
-                    "text-base font-medium transition-all duration-200",
+                    "text-sm font-medium transition-all duration-200",
                     band === tab.value
                       ? "bg-white shadow-sm text-slate-900"
                       : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
@@ -178,13 +149,10 @@ export default function PressureChart() {
 
             {/* CAN Selector */}
             <div className="flex items-center gap-2">
-              <span className="text-lg font-medium text-slate-700">
+              <span className="text-base font-medium text-slate-700">
                 CAN 선택:
               </span>
-              <Select
-                value={can.toString()}
-                onValueChange={(value) => setCan(Number(value))}
-              >
+              <Select value={can.toString()} onValueChange={handleCanChange}>
                 <SelectTrigger className="w-24">
                   <SelectValue />
                 </SelectTrigger>
@@ -205,21 +173,66 @@ export default function PressureChart() {
             <div className="h-[300px] flex items-center justify-center">
               <div className="flex items-center gap-2 text-slate-500">
                 <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin"></div>
-                <span className="text-lg">데이터 로딩 중...</span>
+                <span className="text-base">데이터 로딩 중...</span>
               </div>
             </div>
           ) : (
-            <div className="w-full">
-              <Chart
-                options={options}
-                series={series}
-                type="line"
-                height={300}
-              />
-            </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart
+                data={chartData}
+                margin={{
+                  top: 20,
+                  right: 30,
+                  left: 20,
+                  bottom: 20,
+                }}
+              >
+                <XAxis
+                  dataKey="time"
+                  type="number"
+                  scale="time"
+                  domain={["dataMin", "dataMax"]}
+                  tickFormatter={(time) =>
+                    new Date(Number(time)).toLocaleTimeString("ko-KR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  }
+                  tick={{ fontSize: 12, fill: "#64748b" }}
+                />
+                <YAxis
+                  tick={{ fontSize: 12, fill: "#64748b" }}
+                  label={{
+                    value: "압력 (PSI)",
+                    angle: -90,
+                    position: "insideLeft",
+                    style: {
+                      textAnchor: "middle",
+                      fill: "#64748b",
+                      fontSize: 14,
+                    },
+                  }}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend wrapperStyle={{ color: "#64748b" }} />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6 }}
+                  name={`${can}번 CAN - ${band.toUpperCase()}`}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           )}
         </CardContent>
       </Card>
     </div>
   );
-}
+});
+
+PressureChart.displayName = "PressureChart";
+
+export default PressureChart;

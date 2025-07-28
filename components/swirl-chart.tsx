@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useDataStore } from "@/lib/stores";
 /* ------------------------------------------------------------------
   Utility equations used to compute rotation in degrees
@@ -42,168 +42,274 @@ export interface SwirlChartProps {
   showControls?: boolean;
 }
 
-export function SwirlChart({
-  cycleId,
-  formulaInput = 0,
-  rotation,
-  showControls = true,
-}: SwirlChartProps) {
-  const swirl = useDataStore((s) => s.getSwirlDataByCycle(cycleId));
-  const data = swirl?.[0]?.sensors.map((s) => s.value) ?? DEFAULT_DATA;
+export const SwirlChart = React.memo(
+  ({
+    cycleId,
+    formulaInput = 0,
+    rotation,
+    showControls = true,
+  }: SwirlChartProps) => {
+    const swirl = useDataStore((s) => s.getSwirlDataByCycle(cycleId));
 
-  const [formula, setFormula] = useState<1 | 2 | 3>(1);
+    const [formula, setFormula] = useState<1 | 2 | 3>(1);
 
-  const maxVal = Math.max(...data);
-  const scaled = data.map((v) => (v / maxVal) * 100);
+    // Memoize expensive data processing
+    const { data, maxVal, scaled } = useMemo(() => {
+      const rawData = swirl?.[0]?.sensors.map((s) => s.value) ?? DEFAULT_DATA;
+      const maxValue = Math.max(...rawData);
+      const scaledData = rawData.map((v) => (v / maxValue) * 100);
 
-  const computedDeg = useMemo(() => {
-    switch (formula) {
-      case 1:
-        return equation1(formulaInput);
-      case 2:
-        return equation2(formulaInput);
-      case 3:
-      default:
-        return equation3(formulaInput);
-    }
-  }, [formulaInput, formula]);
+      return {
+        data: rawData,
+        maxVal: maxValue,
+        scaled: scaledData,
+      };
+    }, [swirl]);
 
-  const rot = rotation ?? computedDeg ?? 84;
-  const polarLen = scaled.length;
-  const angleStep = (2 * Math.PI) / polarLen;
+    const computedDeg = useMemo(() => {
+      switch (formula) {
+        case 1:
+          return equation1(formulaInput);
+        case 2:
+          return equation2(formulaInput);
+        case 3:
+        default:
+          return equation3(formulaInput);
+      }
+    }, [formulaInput, formula]);
 
-  const [hover, setHover] = useState<{
-    val: number;
-    px: number;
-    py: number;
-  } | null>(null);
+    // Memoize trigonometric calculations
+    const chartElements = useMemo(() => {
+      const rot = rotation ?? computedDeg ?? 84;
+      const polarLen = scaled.length;
+      const angleStep = (2 * Math.PI) / polarLen;
 
-  return (
-    <div>
-      <svg viewBox="0 0 500 500">
-        {Array.from({ length: 10 }, (_, i) => (
-          <circle
-            key={i}
-            cx={250}
-            cy={250}
-            r={(i + 1) * 20}
-            stroke="#ccc"
-            fill="none"
-          />
-        ))}
-        {Array.from({ length: polarLen }, (_, i) => {
-          const theta = i * angleStep;
-          const x1 = 250 + 200 * Math.cos(theta);
-          const y1 = 250 + 200 * Math.sin(theta);
-          const x2 = 250 - 200 * Math.cos(theta);
-          const y2 = 250 - 200 * Math.sin(theta);
-          return (
+      // Pre-calculate grid circles
+      const gridCircles = Array.from({ length: 10 }, (_, i) => ({
+        key: i,
+        r: (i + 1) * 20,
+      }));
+
+      // Pre-calculate radial lines
+      const radialLines = Array.from({ length: polarLen }, (_, i) => {
+        const theta = i * angleStep;
+        const x1 = 250 + 200 * Math.cos(theta);
+        const y1 = 250 + 200 * Math.sin(theta);
+        const x2 = 250 - 200 * Math.cos(theta);
+        const y2 = 250 - 200 * Math.sin(theta);
+        return {
+          key: i,
+          x1: x1.toFixed(2),
+          y1: y1.toFixed(2),
+          x2: x2.toFixed(2),
+          y2: y2.toFixed(2),
+        };
+      });
+
+      // Pre-calculate labels
+      const labels = scaled.map((_, i) => {
+        const theta = (rot * Math.PI) / 180 + angleStep * i;
+        const lx = 250 + 210 * Math.cos(theta);
+        const ly = 250 + 210 * Math.sin(theta);
+        return {
+          key: `lbl-${i}`,
+          x: lx.toFixed(2),
+          y: ly.toFixed(2),
+          text: i + 1,
+        };
+      });
+
+      // Pre-calculate circles with values
+      const valueCircles = Array.from({ length: 14 }).map((_, i) => {
+        const n = 14;
+        const angle = (2 * Math.PI * i) / n + Math.PI * 0.65;
+        const r = (200 * Math.sin(Math.PI / n)) / (1 + Math.sin(Math.PI / n));
+        const centerRadius = r / Math.sin(Math.PI / n);
+        const cx = 250 + centerRadius * Math.cos(angle);
+        const cy = 250 + centerRadius * Math.sin(angle);
+        return {
+          key: i,
+          cx: cx.toFixed(2),
+          cy: cy.toFixed(2),
+          r: r.toFixed(2),
+          value: i < scaled.length ? scaled[i].toFixed(1) : "0",
+        };
+      });
+
+      // Pre-calculate polyline points
+      const polylinePoints = [
+        ...scaled.map((v, i) => {
+          const theta = (rot * Math.PI) / 180 + angleStep * i;
+          const r = (v / 100) * 200;
+          return `${250 + r * Math.cos(theta)},${250 + r * Math.sin(theta)}`;
+        }),
+        (() => {
+          const r0 = (scaled[0] / 100) * 200;
+          const theta0 = (rot * Math.PI) / 180;
+          return `${250 + r0 * Math.cos(theta0)},${
+            250 + r0 * Math.sin(theta0)
+          }`;
+        })(),
+      ].join(" ");
+
+      // Pre-calculate data points
+      const dataPoints = scaled.map((v, i) => {
+        const theta = (rot * Math.PI) / 180 + angleStep * i;
+        const r = (v / 100) * 200;
+        const cx = 250 + r * Math.cos(theta);
+        const cy = 250 + r * Math.sin(theta);
+        return {
+          key: `pt-${i}`,
+          cx: cx.toFixed(2),
+          cy: cy.toFixed(2),
+          value: data[i],
+          rawCx: cx,
+          rawCy: cy,
+        };
+      });
+
+      return {
+        gridCircles,
+        radialLines,
+        labels,
+        valueCircles,
+        polylinePoints,
+        dataPoints,
+        rot,
+        polarLen,
+        angleStep,
+      };
+    }, [scaled, rotation, computedDeg]);
+
+    const [hover, setHover] = useState<{
+      val: number;
+      px: number;
+      py: number;
+    } | null>(null);
+
+    const handleMouseEnter = useCallback(
+      (value: number, event: React.MouseEvent) => {
+        const rect = (
+          event.currentTarget as SVGElement
+        ).getBoundingClientRect();
+        setHover({
+          val: value,
+          px: event.clientX - rect.left,
+          py: event.clientY - rect.top,
+        });
+      },
+      []
+    );
+
+    const handleMouseLeave = useCallback(() => {
+      setHover(null);
+    }, []);
+
+    return (
+      <div>
+        <svg viewBox="0 0 500 500">
+          {/* Grid circles */}
+          {chartElements.gridCircles.map((circle) => (
+            <circle
+              key={circle.key}
+              cx={250}
+              cy={250}
+              r={circle.r}
+              stroke="#ccc"
+              fill="none"
+            />
+          ))}
+
+          {/* Radial lines */}
+          {chartElements.radialLines.map((line) => (
             <line
-              key={i}
-              x1={x1.toFixed(2)}
-              y1={y1.toFixed(2)}
-              x2={x2.toFixed(2)}
-              y2={y2.toFixed(2)}
+              key={line.key}
+              x1={line.x1}
+              y1={line.y1}
+              x2={line.x2}
+              y2={line.y2}
               stroke="#ddd"
             />
-          );
-        })}
-        {scaled.map((_, i) => {
-          const theta = (rot * Math.PI) / 180 + angleStep * i;
-          const lx = 250 + 210 * Math.cos(theta);
-          const ly = 250 + 210 * Math.sin(theta);
-          return (
+          ))}
+
+          {/* Labels */}
+          {chartElements.labels.map((label) => (
             <text
-              key={`lbl-${i}`}
-              x={lx.toFixed(2)}
-              y={ly.toFixed(2)}
+              key={label.key}
+              x={label.x}
+              y={label.y}
               fontSize={10}
               textAnchor="middle"
               dominantBaseline="middle"
               fill="gray"
             >
-              {i + 1}
+              {label.text}
             </text>
-          );
-        })}
-        {Array.from({ length: 14 }).map((_, i) => {
-          const n = 14;
-          const angle = (2 * Math.PI * i) / n + Math.PI * 0.65;
-          const r = (200 * Math.sin(Math.PI / n)) / (1 + Math.sin(Math.PI / n));
-          const centerRadius = r / Math.sin(Math.PI / n);
-          const cx = 250 + centerRadius * Math.cos(angle);
-          const cy = 250 + centerRadius * Math.sin(angle);
-          return (
-            <g key={i}>
+          ))}
+
+          {/* Value circles */}
+          {chartElements.valueCircles.map((circle) => (
+            <g key={circle.key}>
               <circle
-                cx={cx.toFixed(2)}
-                cy={cy.toFixed(2)}
-                r={r.toFixed(2)}
+                cx={circle.cx}
+                cy={circle.cy}
+                r={circle.r}
                 stroke="blue"
                 fill="none"
               />
               <text
-                x={cx.toFixed(2)}
-                y={cy.toFixed(2)}
+                x={circle.cx}
+                y={circle.cy}
                 fontSize="14"
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fill="blue"
               >
-                {i + 1}
+                {parseInt(circle.key.toString()) + 1}
               </text>
             </g>
-          );
-        })}
+          ))}
 
-        <polyline
-          fill="none"
-          stroke="#e11d48"
-          strokeWidth={2}
-          strokeLinejoin="round"
-          points={[
-            ...scaled.map((v, i) => {
-              const theta = (rot * Math.PI) / 180 + angleStep * i;
-              const r = (v / 100) * 200;
-              return `${250 + r * Math.cos(theta)},${
-                250 + r * Math.sin(theta)
-              }`;
-            }),
-            (() => {
-              const r0 = (scaled[0] / 100) * 200;
-              const theta0 = (rot * Math.PI) / 180;
-              return `${250 + r0 * Math.cos(theta0)},${
-                250 + r0 * Math.sin(theta0)
-              }`;
-            })(),
-          ].join(" ")}
-        />
-        {scaled.map((v, i) => {
-          const theta = (rot * Math.PI) / 180 + angleStep * i;
-          const r = (v / 100) * 200;
-          const cx = 250 + r * Math.cos(theta);
-          const cy = 250 + r * Math.sin(theta);
-          return (
+          {/* Data line */}
+          <polyline
+            fill="none"
+            stroke="#e11d48"
+            strokeWidth={2}
+            strokeLinejoin="round"
+            points={chartElements.polylinePoints}
+          />
+
+          {/* Data points */}
+          {chartElements.dataPoints.map((point) => (
             <circle
-              key={`pt-${i}`}
-              cx={cx.toFixed(2)}
-              cy={cy.toFixed(2)}
+              key={point.key}
+              cx={point.cx}
+              cy={point.cy}
               r={3}
               fill="#e11d48"
-              onMouseEnter={() => setHover({ val: data[i], px: cx, py: cy })}
+              onMouseEnter={() =>
+                setHover({
+                  val: point.value,
+                  px: point.rawCx,
+                  py: point.rawCy,
+                })
+              }
               onMouseLeave={() => setHover(null)}
+              style={{ cursor: "pointer" }}
             />
-          );
-        })}
-        {hover && (
-          <g transform={`translate(${hover.px + 10}, ${hover.py - 10})`}>
-            <rect x={-22} y={-18} width={44} height={22} rx={4} fill="#000" />
-            <text x={0} y={-6} fill="#fff" fontSize={12} textAnchor="middle">
-              {hover.val.toFixed(2)}
-            </text>
-          </g>
-        )}
-      </svg>
-    </div>
-  );
-}
+          ))}
+          {hover && (
+            <g transform={`translate(${hover.px + 10}, ${hover.py - 10})`}>
+              <rect x={-22} y={-18} width={44} height={22} rx={4} fill="#000" />
+              <text x={0} y={-6} fill="#fff" fontSize={12} textAnchor="middle">
+                {hover.val.toFixed(2)}
+              </text>
+            </g>
+          )}
+        </svg>
+      </div>
+    );
+  }
+);
+
+SwirlChart.displayName = "SwirlChart";

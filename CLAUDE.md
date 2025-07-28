@@ -46,7 +46,9 @@ hooks/                 # Custom React hooks
 
 ## State Management Architecture
 
-The application uses **multiple specialized Zustand stores** organized by domain:
+The application uses **multiple specialized Zustand stores** with a **coordinated synchronization pattern**:
+
+### Store Structure:
 
 - **`lib/stores/data-store.ts`** - Core industrial data with CRUD operations:
 
@@ -67,7 +69,24 @@ The application uses **multiple specialized Zustand stores** organized by domain
   - View preferences with localStorage persistence
   - Theme and display settings
 
-Each store follows reactive patterns with computed properties and middleware integration.
+### Store Coordination Pattern:
+
+- **`lib/stores/index.ts`** - Contains the `StoreCoordinator` class that manages inter-store synchronization
+- **Memory-safe subscriptions** with proper cleanup mechanisms
+- **Automatic synchronization** between timeline, UI, and data stores
+- **Single initialization** at app level with `useStoreCoordination()` hook
+
+### Usage Pattern:
+
+```typescript
+// In app root (app/page.tsx)
+useStoreCoordination(); // Initialize once
+
+// In components
+const stores = useStores(); // Get store instances
+const actions = useStoreActions(); // Get coordinated actions
+const selectors = useStoreSelectors(); // Get computed data
+```
 
 ## Data Model
 
@@ -126,10 +145,3 @@ When working on features:
 6. **Testing**: Manual testing only - no automated test framework available
 
 ## Common Tasks
-
-**Adding New Charts:** Extend chart components using Recharts/ApexCharts patterns established in existing chart components
-**State Updates:** Modify the appropriate store in `lib/stores/` following existing reactive patterns and middleware usage
-**New Dashboard Pages:** Add page components to `components/pages/` and register in the page index file
-**Data Mock Generation:** Extend SeededRandom generators in `lib/data.ts` for consistent data across environments
-**UI Components:** Utilize existing shadcn/ui components from `components/ui/` before creating custom ones
-**Variable Groups:** When adding new sensor categories, update Korean group names in data model ("진동", "연소", "전기", "단위기기")

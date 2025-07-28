@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
-import { CycleInfo, VariableInfo, SwirlDataEntry, SwirlDatum, Blowchart, timelineData, blowchartValues } from "../data";
+import { CycleInfo, VariableInfo, VariableStatus, VariableGroup, SwirlDataEntry, SwirlDatum, Blowchart, timelineData, blowchartValues } from "../data";
 
 interface DataState {
   cycles: CycleInfo[];
@@ -24,7 +24,7 @@ interface DataActions {
   setBlowchart: (data: Blowchart) => void;
   updateBlowchartValue: (key: string, value: number) => void;
   
-  updateVariableStatus: (cycleId: string, variableName: string, status: VariableInfo["status"]) => void;
+  updateVariableStatus: (cycleId: string, variableName: string, status: VariableStatus) => void;
   updateVariableValue: (cycleId: string, variableName: string, value: string) => void;
   
   setLoading: (loading: boolean) => void;
@@ -39,10 +39,10 @@ interface DataStore extends DataState, DataActions {
   getCycleById: (id: string) => CycleInfo | null;
   getCyclesByTurbine: (turbine: string) => CycleInfo[];
   getCyclesByDateRange: (from: string, to: string) => CycleInfo[];
-  getCyclesByStatus: (status: VariableInfo["status"]) => CycleInfo[];
+  getCyclesByStatus: (status: VariableStatus) => CycleInfo[];
   
   getSwirlDataByCycle: (cycleId: string) => SwirlDatum[] | null;
-  getVariablesByGroup: (cycleId: string, group: VariableInfo["group"]) => VariableInfo[];
+  getVariablesByGroup: (cycleId: string, group: VariableGroup) => VariableInfo[];
   
   getHealthySummary: () => {
     total: number;
@@ -180,7 +180,7 @@ export const useDataStore = create<DataStore>()(
             ...variable,
             status: Math.random() > 0.1 
               ? variable.status 
-              : ["healthy", "warning", "critical"][Math.floor(Math.random() * 3)] as VariableInfo["status"]
+              : (["healthy", "warning", "critical"] as const)[Math.floor(Math.random() * 3)]
           }))
         }));
         
