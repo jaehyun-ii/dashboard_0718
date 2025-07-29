@@ -17,6 +17,7 @@ import { SwirlChart } from "./swirl-chart";
 import TemperatureDeviationChart from "./temperature-deviation-chart";
 import BlowGraph from "./blow-graph";
 import ModeChart from "./mode-chart";
+
 const groupDisplayData = {
   연소: {
     title: "연소 분석",
@@ -24,9 +25,13 @@ const groupDisplayData = {
     icon: Flame,
     gradient: "from-orange-500 to-red-600",
     charts: [
+      //1열 1/3 차지
       { title: "배기 온도", type: "선형 차트", icon: LineChart },
-      { title: "온도 편차", type: "막대 차트", icon: BarChart },
+      //1열 1/3 차지
       { title: "연소 동압", type: "막대 차트", icon: BarChart },
+      //1열 1/3 차지
+      { title: "온도 편차", type: "막대 차트", icon: BarChart },
+      //2얄 전체 차지
       { title: "연료 모드", type: "데이터 테이블", icon: Table },
     ],
   },
@@ -121,31 +126,80 @@ export const ChartsSection = React.memo(() => {
     };
   }, [selectedVariableGroup]);
 
-  return (
-    <div className="mt-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <div
-            className={`p-3 rounded-xl bg-gradient-to-r ${gradient} shadow-lg`}
-          >
-            <GroupIcon size={24} className="text-white" />
-          </div>
-          <div>
-            <h2 className="text-3xl font-bold text-slate-800">
-              {displayData.title}
-            </h2>
-            <p className="text-slate-600">{displayData.description}</p>
-          </div>
+  // 연소 그룹에 대한 특별한 레이아웃 렌더링
+  const renderCombustionLayout = () => {
+    const charts = displayData.charts;
+    
+    return (
+      <div className="space-y-6">
+        {/* 첫 번째 행: 3개 차트가 1/3씩 차지 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {charts.slice(0, 3).map((chart, index) => (
+            <div
+              key={chart.title}
+              className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200 cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 group"
+              onClick={() => handleChartClick(chart)}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div
+                  className={`p-4 rounded-xl bg-gradient-to-r ${gradient} shadow-lg group-hover:scale-110 transition-transform duration-300`}
+                >
+                  <chart.icon size={28} className="text-white" />
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-medium text-slate-500 uppercase tracking-wide">
+                    {chart.type}
+                  </div>
+                </div>
+              </div>
+              <h3 className="text-xl md:text-2xl font-bold text-slate-800 mb-4 md:mb-8">
+                {chart.title}
+              </h3>
+              <ChartRenderer title={chart.title} />
+            </div>
+          ))}
         </div>
+        
+        {/* 두 번째 행: 연료 모드 차트가 전체 너비 차지 */}
+        {charts.length > 3 && (
+          <div className="w-full">
+            <div
+              className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200 cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-[1.02] group"
+              onClick={() => handleChartClick(charts[3])}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div
+                  className={`p-4 rounded-xl bg-gradient-to-r ${gradient} shadow-lg group-hover:scale-110 transition-transform duration-300`}
+                >
+                  {React.createElement(charts[3].icon, { size: 28, className: "text-white" })}
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-medium text-slate-500 uppercase tracking-wide">
+                    {charts[3].type}
+                  </div>
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold text-slate-800 mb-8">
+                {charts[3].title}
+              </h3>
+              <ChartRenderer title={charts[3].title} />
+            </div>
+          </div>
+        )}
       </div>
+    );
+  };
 
-      <div
-        className={`grid grid-cols-1 md:grid-cols-4 xl:grid-cols-${displayData.charts.length} gap-6 max-w-full`}
-      >
-        {displayData.charts.map((chart) => (
+  // 기본 그리드 레이아웃 렌더링
+  const renderDefaultLayout = () => {
+    return (
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 max-w-full">
+        {displayData.charts.map((chart, index) => (
           <div
             key={chart.title}
-            className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200 cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 group"
+            className={`bg-white rounded-2xl p-6 shadow-lg border border-slate-200 cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 group ${
+              displayData.charts.length === 3 && index === 2 ? "md:col-span-2" : ""
+            }`}
             onClick={() => handleChartClick(chart)}
           >
             <div className="flex items-center justify-between mb-2">
@@ -166,6 +220,35 @@ export const ChartsSection = React.memo(() => {
             <ChartRenderer title={chart.title} />
           </div>
         ))}
+      </div>
+    );
+  };
+
+  return (
+    <div className="mt-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <div
+            className={`p-3 rounded-xl bg-gradient-to-r ${gradient} shadow-lg`}
+          >
+            <GroupIcon size={24} className="text-white" />
+          </div>
+          <div>
+            <h2 className="text-3xl font-bold text-slate-800">
+              {displayData.title}
+            </h2>
+            <p className="text-slate-600">{displayData.description}</p>
+          </div>
+        </div>
+      </div>
+      
+      {/* 큰 박스 (외부 컨테이너) */}
+      <div className="bg-slate-50 rounded-3xl p-8 shadow-xl border border-slate-300">
+        {/* 연소 그룹일 때 특별한 레이아웃, 아니면 기본 레이아웃 */}
+        {selectedVariableGroup === "연소" 
+          ? renderCombustionLayout() 
+          : renderDefaultLayout()
+        }
       </div>
     </div>
   );

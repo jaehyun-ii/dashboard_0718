@@ -1,7 +1,14 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+  useEffect,
+} from "react";
 import { useDataStore } from "@/lib/stores";
+
 /* ------------------------------------------------------------------
   Utility equations used to compute rotation in degrees
 ------------------------------------------------------------------ */
@@ -40,6 +47,7 @@ export interface SwirlChartProps {
   formulaInput?: number;
   rotation?: number;
   showControls?: boolean;
+  className?: string;
 }
 
 export const SwirlChart = React.memo(
@@ -48,10 +56,28 @@ export const SwirlChart = React.memo(
     formulaInput = 0,
     rotation,
     showControls = true,
+    className = "",
   }: SwirlChartProps) => {
     const swirl = useDataStore((s) => s.getSwirlDataByCycle(cycleId));
+    const containerRef = useRef<HTMLDivElement>(null);
 
     const [formula, setFormula] = useState<1 | 2 | 3>(1);
+    const [dimensions, setDimensions] = useState({ width: 500, height: 500 });
+
+    // Handle responsive sizing
+    useEffect(() => {
+      const handleResize = () => {
+        if (containerRef.current) {
+          const { width } = containerRef.current.getBoundingClientRect();
+          const size = Math.min(width, window.innerHeight * 0.8);
+          setDimensions({ width: size, height: size });
+        }
+      };
+
+      handleResize();
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
     // Memoize expensive data processing
     const { data, maxVal, scaled } = useMemo(() => {
@@ -78,25 +104,30 @@ export const SwirlChart = React.memo(
       }
     }, [formulaInput, formula]);
 
-    // Memoize trigonometric calculations
+    // Memoize trigonometric calculations with responsive scaling
     const chartElements = useMemo(() => {
       const rot = rotation ?? computedDeg ?? 84;
       const polarLen = scaled.length;
       const angleStep = (2 * Math.PI) / polarLen;
 
+      // Use responsive center and radius based on container size
+      const center = Math.min(dimensions.width, dimensions.height) / 2;
+      const maxRadius = center * 0.8; // 80% of half the container size
+      const labelRadius = maxRadius * 1.05;
+
       // Pre-calculate grid circles
       const gridCircles = Array.from({ length: 10 }, (_, i) => ({
         key: i,
-        r: (i + 1) * 20,
+        r: ((i + 1) / 10) * maxRadius,
       }));
 
       // Pre-calculate radial lines
       const radialLines = Array.from({ length: polarLen }, (_, i) => {
         const theta = i * angleStep;
-        const x1 = 250 + 200 * Math.cos(theta);
-        const y1 = 250 + 200 * Math.sin(theta);
-        const x2 = 250 - 200 * Math.cos(theta);
-        const y2 = 250 - 200 * Math.sin(theta);
+        const x1 = center + maxRadius * Math.cos(theta);
+        const y1 = center + maxRadius * Math.sin(theta);
+        const x2 = center - maxRadius * Math.cos(theta);
+        const y2 = center - maxRadius * Math.sin(theta);
         return {
           key: i,
           x1: x1.toFixed(2),
@@ -106,11 +137,11 @@ export const SwirlChart = React.memo(
         };
       });
 
-      // Pre-calculate labels
+      // Pre-calculate labels with responsive positioning
       const labels = scaled.map((_, i) => {
         const theta = (rot * Math.PI) / 180 + angleStep * i;
-        const lx = 250 + 210 * Math.cos(theta);
-        const ly = 250 + 210 * Math.sin(theta);
+        const lx = center + labelRadius * Math.cos(theta);
+        const ly = center + labelRadius * Math.sin(theta);
         return {
           key: `lbl-${i}`,
           x: lx.toFixed(2),
@@ -119,14 +150,15 @@ export const SwirlChart = React.memo(
         };
       });
 
-      // Pre-calculate circles with values
+      // Pre-calculate circles with values - responsive sizing
       const valueCircles = Array.from({ length: 14 }).map((_, i) => {
         const n = 14;
         const angle = (2 * Math.PI * i) / n + Math.PI * 0.65;
-        const r = (200 * Math.sin(Math.PI / n)) / (1 + Math.sin(Math.PI / n));
+        const r =
+          (maxRadius * Math.sin(Math.PI / n)) / (1 + Math.sin(Math.PI / n));
         const centerRadius = r / Math.sin(Math.PI / n);
-        const cx = 250 + centerRadius * Math.cos(angle);
-        const cy = 250 + centerRadius * Math.sin(angle);
+        const cx = center + centerRadius * Math.cos(angle);
+        const cy = center + centerRadius * Math.sin(angle);
         return {
           key: i,
           cx: cx.toFixed(2),
@@ -136,28 +168,30 @@ export const SwirlChart = React.memo(
         };
       });
 
-      // Pre-calculate polyline points
+      // Pre-calculate polyline points with responsive scaling
       const polylinePoints = [
         ...scaled.map((v, i) => {
           const theta = (rot * Math.PI) / 180 + angleStep * i;
-          const r = (v / 100) * 200;
-          return `${250 + r * Math.cos(theta)},${250 + r * Math.sin(theta)}`;
+          const r = (v / 100) * maxRadius;
+          return `${center + r * Math.cos(theta)},${
+            center + r * Math.sin(theta)
+          }`;
         }),
         (() => {
-          const r0 = (scaled[0] / 100) * 200;
+          const r0 = (scaled[0] / 100) * maxRadius;
           const theta0 = (rot * Math.PI) / 180;
-          return `${250 + r0 * Math.cos(theta0)},${
-            250 + r0 * Math.sin(theta0)
+          return `${center + r0 * Math.cos(theta0)},${
+            center + r0 * Math.sin(theta0)
           }`;
         })(),
       ].join(" ");
 
-      // Pre-calculate data points
+      // Pre-calculate data points with responsive scaling
       const dataPoints = scaled.map((v, i) => {
         const theta = (rot * Math.PI) / 180 + angleStep * i;
-        const r = (v / 100) * 200;
-        const cx = 250 + r * Math.cos(theta);
-        const cy = 250 + r * Math.sin(theta);
+        const r = (v / 100) * maxRadius;
+        const cx = center + r * Math.cos(theta);
+        const cy = center + r * Math.sin(theta);
         return {
           key: `pt-${i}`,
           cx: cx.toFixed(2),
@@ -178,8 +212,10 @@ export const SwirlChart = React.memo(
         rot,
         polarLen,
         angleStep,
+        center,
+        maxRadius,
       };
-    }, [scaled, rotation, computedDeg]);
+    }, [scaled, rotation, computedDeg, dimensions]);
 
     const [hover, setHover] = useState<{
       val: number;
@@ -205,18 +241,34 @@ export const SwirlChart = React.memo(
       setHover(null);
     }, []);
 
+    // Calculate responsive font sizes
+    const baseFontSize = Math.max(8, dimensions.width / 50);
+    const labelFontSize = Math.max(10, dimensions.width / 40);
+    const tooltipFontSize = Math.max(10, dimensions.width / 42);
+
     return (
-      <div>
-        <svg viewBox="0 0 500 500">
+      <div
+        ref={containerRef}
+        className={`w-full h-auto ${className}`}
+        style={{ maxWidth: "100%", aspectRatio: "1" }}
+      >
+        <svg
+          width={dimensions.width}
+          height={dimensions.height}
+          viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
+          className="w-full h-full"
+          style={{ maxWidth: "100%", height: "auto" }}
+        >
           {/* Grid circles */}
           {chartElements.gridCircles.map((circle) => (
             <circle
               key={circle.key}
-              cx={250}
-              cy={250}
+              cx={chartElements.center}
+              cy={chartElements.center}
               r={circle.r}
               stroke="#ccc"
               fill="none"
+              strokeWidth={dimensions.width / 500} // Responsive stroke width
             />
           ))}
 
@@ -229,6 +281,7 @@ export const SwirlChart = React.memo(
               x2={line.x2}
               y2={line.y2}
               stroke="#ddd"
+              strokeWidth={dimensions.width / 1000} // Responsive stroke width
             />
           ))}
 
@@ -238,7 +291,7 @@ export const SwirlChart = React.memo(
               key={label.key}
               x={label.x}
               y={label.y}
-              fontSize={10}
+              fontSize={baseFontSize}
               textAnchor="middle"
               dominantBaseline="middle"
               fill="gray"
@@ -256,11 +309,12 @@ export const SwirlChart = React.memo(
                 r={circle.r}
                 stroke="blue"
                 fill="none"
+                strokeWidth={dimensions.width / 500}
               />
               <text
                 x={circle.cx}
                 y={circle.cy}
-                fontSize="14"
+                fontSize={labelFontSize}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fill="blue"
@@ -274,7 +328,7 @@ export const SwirlChart = React.memo(
           <polyline
             fill="none"
             stroke="#e11d48"
-            strokeWidth={2}
+            strokeWidth={Math.max(1, dimensions.width / 250)} // Responsive stroke width
             strokeLinejoin="round"
             points={chartElements.polylinePoints}
           />
@@ -285,7 +339,7 @@ export const SwirlChart = React.memo(
               key={point.key}
               cx={point.cx}
               cy={point.cy}
-              r={3}
+              r={Math.max(2, dimensions.width / 167)} // Responsive radius
               fill="#e11d48"
               onMouseEnter={() =>
                 setHover({
@@ -298,10 +352,26 @@ export const SwirlChart = React.memo(
               style={{ cursor: "pointer" }}
             />
           ))}
+
+          {/* Tooltip */}
           {hover && (
             <g transform={`translate(${hover.px + 10}, ${hover.py - 10})`}>
-              <rect x={-22} y={-18} width={44} height={22} rx={4} fill="#000" />
-              <text x={0} y={-6} fill="#fff" fontSize={12} textAnchor="middle">
+              <rect
+                x={-22}
+                y={-18}
+                width={44}
+                height={22}
+                rx={4}
+                fill="#000"
+                fillOpacity={0.8}
+              />
+              <text
+                x={0}
+                y={-6}
+                fill="#fff"
+                fontSize={tooltipFontSize}
+                textAnchor="middle"
+              >
                 {hover.val.toFixed(2)}
               </text>
             </g>
