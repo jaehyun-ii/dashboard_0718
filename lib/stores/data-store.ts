@@ -1,37 +1,54 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
-import { CycleInfo, VariableInfo, VariableStatus, VariableGroup, SwirlDataEntry, SwirlDatum, Blowchart, timelineData, blowchartValues } from "../data";
+import { CycleInfo, VariableInfo, VariableStatus, VariableGroup, SwirlDataEntry, SwirlDatum, Blowchart } from "../data";
+import { CyclesAPI, formatApiError } from "../api/cycles-api";
 
 interface DataState {
   cycles: CycleInfo[];
   swirlData: SwirlDataEntry[];
   blowchart: Blowchart;
   isLoading: boolean;
+  isLoadingCycles: boolean;
+  isLoadingSwirlData: boolean;
+  isLoadingBlowchart: boolean;
   lastUpdated: number;
   error: string | null;
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  } | null;
 }
 
 interface DataActions {
+  // API-based actions
+  fetchCycles: (params?: { page?: number; limit?: number; turbine?: string; dateFrom?: string; dateTo?: string; status?: VariableStatus; }) => Promise<void>;
+  fetchCycleById: (id: string) => Promise<CycleInfo | null>;
+  createCycle: (params: { name: string; turbine: string; date: string; start: number; end: number; color?: string; }) => Promise<void>;
+  updateCycle: (id: string, updates: Partial<CycleInfo>) => Promise<void>;
+  deleteCycle: (id: string) => Promise<void>;
+  
+  fetchSwirlData: (cycleId?: string) => Promise<void>;
+  updateSwirlData: (cycleId: string, data: SwirlDatum[]) => Promise<void>;
+  
+  fetchBlowchart: (keys?: string[]) => Promise<void>;
+  updateBlowchartValue: (key: string, value: number) => Promise<void>;
+  updateBlowchartValues: (values: Record<string, number>) => Promise<void>;
+  
+  updateVariableStatus: (cycleId: string, variableName: string, status: VariableStatus) => Promise<void>;
+  updateVariableValue: (cycleId: string, variableName: string, value: string) => Promise<void>;
+  
+  // Local state management
   setCycles: (cycles: CycleInfo[]) => void;
-  addCycle: (cycle: CycleInfo) => void;
-  updateCycle: (id: string, updates: Partial<CycleInfo>) => void;
-  deleteCycle: (id: string) => void;
-  
   setSwirlData: (data: SwirlDataEntry[]) => void;
-  addSwirlData: (entry: SwirlDataEntry) => void;
-  updateSwirlData: (cycleId: string, data: SwirlDatum[]) => void;
-  
   setBlowchart: (data: Blowchart) => void;
-  updateBlowchartValue: (key: string, value: number) => void;
-  
-  updateVariableStatus: (cycleId: string, variableName: string, status: VariableStatus) => void;
-  updateVariableValue: (cycleId: string, variableName: string, value: string) => void;
-  
-  setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  setPagination: (pagination: DataState['pagination']) => void;
   
+  // Utility actions
   refreshData: () => Promise<void>;
-  loadInitialData: () => void;
   resetData: () => void;
 }
 
@@ -85,31 +102,108 @@ const initialSwirlData: SwirlDataEntry[] = [
 
 export const useDataStore = create<DataStore>()(
   subscribeWithSelector((set, get) => ({
-    cycles: timelineData.cycles,
-    swirlData: initialSwirlData,
-    blowchart: blowchartValues,
+    cycles: [],
+    swirlData: [],
+    blowchart: {},
     isLoading: false,
+    isLoadingCycles: false,
+    isLoadingSwirlData: false,
+    isLoadingBlowchart: false,
     lastUpdated: Date.now(),
     error: null,
+    pagination: null,
 
+    // API-based actions
+    fetchCycles: async (params = {}) => {
+      set({ isLoadingCycles: true, error: null });
+      try {
+        const response = await CyclesAPI.fetchCycles(params);
+        set({
+          cycles: response.data.cycles,
+          pagination: response.data.pagination,
+          isLoadingCycles: false,
+          lastUpdated: Date.now(),
+        });
+      } catch (error) {
+        set({
+          isLoadingCycles: false,
+          error: formatApiError(error),
+        });
+      }
+    },
+
+    fetchCycleById: async (id) => {
+      set({ isLoadingCycles: true, error: null });
+      try {
+        const response = await CyclesAPI.getCycleById(id);
+        set({ isLoadingCycles: false });
+        return response.data || null;
+      } catch (error) {
+        set({
+          isLoadingCycles: false,
+          error: formatApiError(error),
+        });
+        return null;
+      }
+    },
+
+    createCycle: async (params) => {
+      set({ isLoadingCycles: true, error: null });
+      try {
+        const response = await CyclesAPI.createCycle(params);
+        const newCycle = response.data!;
+        set((state) => ({
+          cycles: [...state.cycles, newCycle],
+          isLoadingCycles: false,
+          lastUpdated: Date.now(),
+        }));
+      } catch (error) {
+        set({
+          isLoadingCycles: false,
+          error: formatApiError(error),
+        });
+      }
+    },
+
+    updateCycle: async (id, updates) => {
+      set({ isLoadingCycles: true, error: null });
+      try {
+        const response = await CyclesAPI.updateCycle(id, updates);
+        const updatedCycle = response.data!;
+        set((state) => ({
+          cycles: state.cycles.map(cycle =>
+            cycle.id === id ? updatedCycle : cycle
+          ),
+          isLoadingCycles: false,
+          lastUpdated: Date.now(),
+        }));
+      } catch (error) {
+        set({
+          isLoadingCycles: false,
+          error: formatApiError(error),
+        });
+      }
+    },
+
+    deleteCycle: async (id) => {
+      set({ isLoadingCycles: true, error: null });
+      try {
+        await CyclesAPI.deleteCycle(id);
+        set((state) => ({
+          cycles: state.cycles.filter(cycle => cycle.id !== id),
+          isLoadingCycles: false,
+          lastUpdated: Date.now(),
+        }));
+      } catch (error) {
+        set({
+          isLoadingCycles: false,
+          error: formatApiError(error),
+        });
+      }
+    },
+
+    // Local state management
     setCycles: (cycles) => set({ cycles, lastUpdated: Date.now() }),
-    
-    addCycle: (cycle) => set((state) => ({
-      cycles: [...state.cycles, cycle],
-      lastUpdated: Date.now(),
-    })),
-    
-    updateCycle: (id, updates) => set((state) => ({
-      cycles: state.cycles.map(cycle =>
-        cycle.id === id ? { ...cycle, ...updates } : cycle
-      ),
-      lastUpdated: Date.now(),
-    })),
-    
-    deleteCycle: (id) => set((state) => ({
-      cycles: state.cycles.filter(cycle => cycle.id !== id),
-      lastUpdated: Date.now(),
-    })),
 
     setSwirlData: (data) => set({ swirlData: data, lastUpdated: Date.now() }),
     

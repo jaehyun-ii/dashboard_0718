@@ -177,6 +177,55 @@ timelineData.cycles.push({
   variables: makeVars("26"),
 });
 
+// 테스트용 짧은 사이클들 추가
+// Case 1: 매우 짧은 사이클 (0.03시간 = 약 2분) - 점으로만 표시
+timelineData.cycles.push({
+  id: "test-very-short",
+  name: "Test Very Short",
+  turbine: "Turbine A",
+  date: "2025-07-17",
+  start: 11,
+  end: 11.03,
+  color: "from-red-600 to-red-700",
+  variables: makeVars("test1"),
+});
+
+// Case 2: 짧은 사이클 (0.2시간 = 12분) - 2개 모드
+timelineData.cycles.push({
+  id: "test-short",
+  name: "Test Short",
+  turbine: "Turbine A", 
+  date: "2025-07-17",
+  start: 12,
+  end: 12.2,
+  color: "from-yellow-600 to-orange-600",
+  variables: makeVars("test2"),
+});
+
+// Case 3: 중간 사이클 (1시간) - 3개 모드
+timelineData.cycles.push({
+  id: "test-medium",
+  name: "Test Medium",
+  turbine: "Turbine A",
+  date: "2025-07-17", 
+  start: 13,
+  end: 14,
+  color: "from-green-600 to-blue-600",
+  variables: makeVars("test3"),
+});
+
+// Case 4: 정상 길이 사이클이지만 한 모드가 매우 짧은 경우 (6시간)
+timelineData.cycles.push({
+  id: "test-mixed-modes",
+  name: "Test Mixed Modes",
+  turbine: "Turbine A",
+  date: "2025-07-17",
+  start: 15,
+  end: 21, // 6시간 길이
+  color: "from-purple-600 to-pink-600",
+  variables: makeVars("test4"),
+});
+
 export const blowchartValues: Blowchart = {
   can1: 0.000602628,
   can2: 0.000288516,

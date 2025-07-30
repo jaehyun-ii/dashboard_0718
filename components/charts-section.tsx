@@ -11,12 +11,15 @@ import {
   Zap,
   Cpu,
 } from "lucide-react";
-import { useUIStore } from "@/lib/stores";
+import { useUIStore, useTimelineStore } from "@/lib/stores";
 import { ChartInfo } from "@/lib/data";
 import { SwirlChart } from "./swirl-chart";
-import TemperatureDeviationChart from "./temperature-deviation-chart";
-import BlowGraph from "./blow-graph";
-import ModeChart from "./mode-chart";
+import {
+  TimeAwareTemperatureChart,
+  TimeAwareBlowGraph,
+  TimeAwareModeChart,
+} from "./time-aware-charts";
+import { ChartTimeSlider } from "./chart-time-slider";
 
 const groupDisplayData = {
   연소: {
@@ -83,29 +86,38 @@ const groupDisplayData = {
 };
 
 // Memoized chart renderer component
-const ChartRenderer = React.memo(({ title }: { title: string }) => {
-  switch (title) {
-    case "배기 온도":
-      return <SwirlChart showControls={false} cycleId="215" />;
-    case "온도 편차":
-      return <TemperatureDeviationChart />;
-    case "연소 동압":
-      return <BlowGraph />;
-    case "연료 모드":
-      return <ModeChart />;
-    default:
-      return (
-        <div className="h-48 flex items-center justify-center text-gray-500">
-          차트 준비 중...
-        </div>
-      );
+const ChartRenderer = React.memo(
+  ({ title, currentTime }: { title: string; currentTime: number }) => {
+    switch (title) {
+      case "배기 온도":
+        return (
+          <SwirlChart
+            showControls={false}
+            cycleId="215"
+            selectedTime={currentTime}
+          />
+        );
+      case "온도 편차":
+        return <TimeAwareTemperatureChart selectedTime={currentTime} />;
+      case "연소 동압":
+        return <TimeAwareBlowGraph selectedTime={currentTime} />;
+      case "연료 모드":
+        return <TimeAwareModeChart selectedTime={currentTime} />;
+      default:
+        return (
+          <div className="h-48 flex items-center justify-center text-gray-500">
+            차트 준비 중...
+          </div>
+        );
+    }
   }
-});
+);
 
 ChartRenderer.displayName = "ChartRenderer";
 
 export const ChartsSection = React.memo(() => {
   const { selectedVariableGroup } = useUIStore();
+  const { currentTime } = useTimelineStore();
 
   const handleChartClick = useCallback(
     (chart: ChartInfo) => {
@@ -129,7 +141,7 @@ export const ChartsSection = React.memo(() => {
   // 연소 그룹에 대한 특별한 레이아웃 렌더링
   const renderCombustionLayout = () => {
     const charts = displayData.charts;
-    
+
     return (
       <div className="space-y-6">
         {/* 첫 번째 행: 3개 차트가 1/3씩 차지 */}
@@ -155,11 +167,11 @@ export const ChartsSection = React.memo(() => {
               <h3 className="text-xl md:text-2xl font-bold text-slate-800 mb-4 md:mb-8">
                 {chart.title}
               </h3>
-              <ChartRenderer title={chart.title} />
+              <ChartRenderer title={chart.title} currentTime={currentTime} />
             </div>
           ))}
         </div>
-        
+
         {/* 두 번째 행: 연료 모드 차트가 전체 너비 차지 */}
         {charts.length > 3 && (
           <div className="w-full">
@@ -171,7 +183,10 @@ export const ChartsSection = React.memo(() => {
                 <div
                   className={`p-4 rounded-xl bg-gradient-to-r ${gradient} shadow-lg group-hover:scale-110 transition-transform duration-300`}
                 >
-                  {React.createElement(charts[3].icon, { size: 28, className: "text-white" })}
+                  {React.createElement(charts[3].icon, {
+                    size: 28,
+                    className: "text-white",
+                  })}
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-medium text-slate-500 uppercase tracking-wide">
@@ -182,7 +197,10 @@ export const ChartsSection = React.memo(() => {
               <h3 className="text-2xl font-bold text-slate-800 mb-8">
                 {charts[3].title}
               </h3>
-              <ChartRenderer title={charts[3].title} />
+              <ChartRenderer
+                title={charts[3].title}
+                currentTime={currentTime}
+              />
             </div>
           </div>
         )}
@@ -198,7 +216,9 @@ export const ChartsSection = React.memo(() => {
           <div
             key={chart.title}
             className={`bg-white rounded-2xl p-6 shadow-lg border border-slate-200 cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 group ${
-              displayData.charts.length === 3 && index === 2 ? "md:col-span-2" : ""
+              displayData.charts.length === 3 && index === 2
+                ? "md:col-span-2"
+                : ""
             }`}
             onClick={() => handleChartClick(chart)}
           >
@@ -217,7 +237,7 @@ export const ChartsSection = React.memo(() => {
             <h3 className="text-2xl font-bold text-slate-800 mb-8">
               {chart.title}
             </h3>
-            <ChartRenderer title={chart.title} />
+            <ChartRenderer title={chart.title} currentTime={currentTime} />
           </div>
         ))}
       </div>
@@ -241,14 +261,27 @@ export const ChartsSection = React.memo(() => {
           </div>
         </div>
       </div>
-      
+
+      {/* 시간 슬라이더 */}
+      <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200 mb-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600">
+            <TrendingUp size={18} className="text-white" />
+          </div>
+          <h3 className="text-lg font-semibold text-slate-800">시간대 선택</h3>
+          <span className="text-sm text-slate-500">
+            차트 데이터 시점을 조정하세요
+          </span>
+        </div>
+        <ChartTimeSlider />
+      </div>
+
       {/* 큰 박스 (외부 컨테이너) */}
       <div className="bg-slate-50 rounded-3xl p-8 shadow-xl border border-slate-300">
         {/* 연소 그룹일 때 특별한 레이아웃, 아니면 기본 레이아웃 */}
-        {selectedVariableGroup === "연소" 
-          ? renderCombustionLayout() 
-          : renderDefaultLayout()
-        }
+        {selectedVariableGroup === "연소"
+          ? renderCombustionLayout()
+          : renderDefaultLayout()}
       </div>
     </div>
   );

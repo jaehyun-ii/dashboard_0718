@@ -145,6 +145,17 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
   },
 
   getVisibleTimeRange: () => {
+    const selectedCycle = get().selectedCycle;
+    
+    // 선택된 사이클이 있으면 해당 사이클의 시간 범위를 정확히 사용
+    if (selectedCycle) {
+      return {
+        start: selectedCycle.start,
+        end: selectedCycle.end,
+      };
+    }
+
+    // 선택된 사이클이 없으면 현재 주의 모든 사이클 범위 사용
     const cycles = get().getCurrentWeekCycles();
     if (cycles.length === 0) return { start: 0, end: 24 };
     

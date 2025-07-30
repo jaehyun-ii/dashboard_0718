@@ -48,6 +48,7 @@ export interface SwirlChartProps {
   rotation?: number;
   showControls?: boolean;
   className?: string;
+  selectedTime?: number;
 }
 
 export const SwirlChart = React.memo(
@@ -57,6 +58,7 @@ export const SwirlChart = React.memo(
     rotation,
     showControls = true,
     className = "",
+    selectedTime,
   }: SwirlChartProps) => {
     const swirl = useDataStore((s) => s.getSwirlDataByCycle(cycleId));
     const containerRef = useRef<HTMLDivElement>(null);
@@ -81,7 +83,14 @@ export const SwirlChart = React.memo(
 
     // Memoize expensive data processing
     const { data, maxVal, scaled } = useMemo(() => {
-      const rawData = swirl?.[0]?.sensors.map((s) => s.value) ?? DEFAULT_DATA;
+      let rawData = swirl?.[0]?.sensors.map((s) => s.value) ?? DEFAULT_DATA;
+      
+      // If selectedTime is provided, adjust the data based on time
+      if (selectedTime !== undefined) {
+        const timeModifier = Math.sin(selectedTime * 0.5) * 0.2 + 1; // Vary data by time
+        rawData = rawData.map(val => val * timeModifier);
+      }
+      
       const maxValue = Math.max(...rawData);
       const scaledData = rawData.map((v) => (v / maxValue) * 100);
 
@@ -90,7 +99,7 @@ export const SwirlChart = React.memo(
         maxVal: maxValue,
         scaled: scaledData,
       };
-    }, [swirl]);
+    }, [swirl, selectedTime]);
 
     const computedDeg = useMemo(() => {
       switch (formula) {
@@ -225,9 +234,10 @@ export const SwirlChart = React.memo(
 
     const handleMouseEnter = useCallback(
       (value: number, event: React.MouseEvent) => {
-        const rect = (
-          event.currentTarget as SVGElement
-        ).getBoundingClientRect();
+        const svgElement = event.currentTarget.closest('svg');
+        if (!svgElement) return;
+        
+        const rect = svgElement.getBoundingClientRect();
         setHover({
           val: value,
           px: event.clientX - rect.left,
@@ -235,6 +245,23 @@ export const SwirlChart = React.memo(
         });
       },
       []
+    );
+
+    const handleMouseMove = useCallback(
+      (event: React.MouseEvent) => {
+        if (!hover) return;
+        
+        const svgElement = event.currentTarget.closest('svg');
+        if (!svgElement) return;
+        
+        const rect = svgElement.getBoundingClientRect();
+        setHover(prev => prev ? {
+          ...prev,
+          px: event.clientX - rect.left,
+          py: event.clientY - rect.top,
+        } : null);
+      },
+      [hover]
     );
 
     const handleMouseLeave = useCallback(() => {
@@ -341,36 +368,64 @@ export const SwirlChart = React.memo(
               cy={point.cy}
               r={Math.max(2, dimensions.width / 167)} // Responsive radius
               fill="#e11d48"
-              onMouseEnter={() =>
-                setHover({
-                  val: point.value,
-                  px: point.rawCx,
-                  py: point.rawCy,
-                })
-              }
-              onMouseLeave={() => setHover(null)}
+              onMouseEnter={(e) => handleMouseEnter(point.value, e)}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
               style={{ cursor: "pointer" }}
             />
           ))}
 
-          {/* Tooltip */}
+          {/* Enhanced Tooltip */}
           {hover && (
-            <g transform={`translate(${hover.px + 10}, ${hover.py - 10})`}>
+            <g transform={`translate(${hover.px + 15}, ${hover.py - 25})`}>
+              {/* Tooltip shadow */}
               <rect
-                x={-22}
-                y={-18}
-                width={44}
-                height={22}
-                rx={4}
+                x={-35}
+                y={-28}
+                width={70}
+                height={40}
+                rx={8}
                 fill="#000"
-                fillOpacity={0.8}
+                fillOpacity={0.1}
+                transform="translate(2, 2)"
               />
+              {/* Tooltip background */}
+              <rect
+                x={-35}
+                y={-28}
+                width={70}
+                height={40}
+                rx={8}
+                fill="#1e293b"
+                stroke="#e2e8f0"
+                strokeWidth={1}
+              />
+              {/* Tooltip arrow */}
+              <path
+                d="M -8 12 L 0 20 L 8 12 Z"
+                fill="#1e293b"
+                stroke="#e2e8f0"
+                strokeWidth={1}
+              />
+              {/* Tooltip label */}
               <text
                 x={0}
-                y={-6}
-                fill="#fff"
-                fontSize={tooltipFontSize}
+                y={-15}
+                fill="#94a3b8"
+                fontSize={Math.max(8, tooltipFontSize * 0.8)}
                 textAnchor="middle"
+                fontWeight="500"
+              >
+                센서 값
+              </text>
+              {/* Tooltip value */}
+              <text
+                x={0}
+                y={-2}
+                fill="#ffffff"
+                fontSize={Math.max(10, tooltipFontSize)}
+                textAnchor="middle"
+                fontWeight="600"
               >
                 {hover.val.toFixed(2)}
               </text>
