@@ -34,8 +34,6 @@ const groupDisplayData = {
       { title: "연소 동압", type: "막대 차트", icon: BarChart },
       //1열 1/3 차지
       { title: "온도 편차", type: "막대 차트", icon: BarChart },
-      //2얄 전체 차지
-      { title: "연료 모드", type: "데이터 테이블", icon: Table },
     ],
   },
   진동: {
@@ -87,8 +85,13 @@ const groupDisplayData = {
 
 // Memoized chart renderer component
 const ChartRenderer = React.memo(
-  ({ title, currentTime, combustionApiData, timeline }: { 
-    title: string; 
+  ({
+    title,
+    currentTime,
+    combustionApiData,
+    timeline,
+  }: {
+    title: string;
     currentTime: number;
     combustionApiData: any;
     timeline: any;
@@ -108,8 +111,6 @@ const ChartRenderer = React.memo(
         return <TimeAwareTemperatureChart selectedTime={currentTime} />;
       case "연소 동압":
         return <TimeAwareBlowGraph selectedTime={currentTime} />;
-      case "연료 모드":
-        return <TimeAwareModeChart selectedTime={currentTime} />;
       default:
         return (
           <div className="h-48 flex items-center justify-center text-gray-500">
@@ -126,6 +127,14 @@ export const ChartsSection = React.memo(() => {
   const { selectedVariableGroup, combustionApiData } = useUIStore();
   const timeline = useTimelineStore();
   const { currentTime } = timeline;
+
+  // API 데이터 디버깅
+  console.log("=== Charts Section Debug ===");
+  console.log("selectedVariableGroup:", selectedVariableGroup);
+  console.log("combustionApiData:", combustionApiData);
+  console.log("currentTime:", currentTime);
+  console.log("selectedCycle:", timeline.selectedCycle);
+  console.log("=== End Charts Section Debug ===");
 
   const handleChartClick = useCallback(
     (chart: ChartInfo) => {
@@ -175,50 +184,15 @@ export const ChartsSection = React.memo(() => {
               <h3 className="text-xl md:text-2xl font-bold text-slate-800 mb-4 md:mb-8">
                 {chart.title}
               </h3>
-              <ChartRenderer 
-                title={chart.title} 
-                currentTime={currentTime} 
+              <ChartRenderer
+                title={chart.title}
+                currentTime={currentTime}
                 combustionApiData={combustionApiData}
                 timeline={timeline}
               />
             </div>
           ))}
         </div>
-
-        {/* 두 번째 행: 연료 모드 차트가 전체 너비 차지 */}
-        {charts.length > 3 && (
-          <div className="w-full">
-            <div
-              className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200 cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-[1.02] group"
-              onClick={() => handleChartClick(charts[3])}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div
-                  className={`p-4 rounded-xl bg-gradient-to-r ${gradient} shadow-lg group-hover:scale-110 transition-transform duration-300`}
-                >
-                  {React.createElement(charts[3].icon, {
-                    size: 28,
-                    className: "text-white",
-                  })}
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-medium text-slate-500 uppercase tracking-wide">
-                    {charts[3].type}
-                  </div>
-                </div>
-              </div>
-              <h3 className="text-2xl font-bold text-slate-800 mb-8">
-                {charts[3].title}
-              </h3>
-              <ChartRenderer
-                title={charts[3].title}
-                currentTime={currentTime}
-                combustionApiData={combustionApiData}
-                timeline={timeline}
-              />
-            </div>
-          </div>
-        )}
       </div>
     );
   };
@@ -252,9 +226,9 @@ export const ChartsSection = React.memo(() => {
             <h3 className="text-2xl font-bold text-slate-800 mb-8">
               {chart.title}
             </h3>
-            <ChartRenderer 
-              title={chart.title} 
-              currentTime={currentTime} 
+            <ChartRenderer
+              title={chart.title}
+              currentTime={currentTime}
               combustionApiData={combustionApiData}
               timeline={timeline}
             />
