@@ -13,10 +13,10 @@ export const createPersistMiddleware = <T extends object>(
     if (typeof window === "undefined") {
       return stateCreator;
     }
-    
+
     return (set: any, get: any, api: any) => {
       const store = stateCreator(set, get, api);
-      
+
       try {
         const persistedData = localStorage.getItem(name);
         if (persistedData) {
@@ -27,20 +27,22 @@ export const createPersistMiddleware = <T extends object>(
       } catch (error) {
         console.warn(`Failed to restore persisted state for ${name}:`, error);
       }
-      
+
       const originalSet = set;
       api.setState = (partial: any, replace?: boolean) => {
         originalSet(partial, replace);
-        
+
         try {
           const currentState = get();
-          const toPersist = partialize ? partialize(currentState) : currentState;
+          const toPersist = partialize
+            ? partialize(currentState)
+            : currentState;
           localStorage.setItem(name, JSON.stringify(toPersist));
         } catch (error) {
           console.warn(`Failed to persist state for ${name}:`, error);
         }
       };
-      
+
       return store;
     };
   };
@@ -54,25 +56,30 @@ export interface DevtoolsOptions {
 export const createDevtoolsMiddleware = <T extends object>(
   options: DevtoolsOptions = {}
 ) => {
-  const { name = "store", enabled = process.env.NODE_ENV === "development" } = options;
-  
+  const { name = "store", enabled = process.env.NODE_ENV === "development" } =
+    options;
+
   return (stateCreator: StateCreator<T>) => {
-    if (!enabled || typeof window === "undefined" || !window.__REDUX_DEVTOOLS_EXTENSION__) {
+    if (
+      !enabled ||
+      typeof window === "undefined" ||
+      !window.__REDUX_DEVTOOLS_EXTENSION__
+    ) {
       return stateCreator;
     }
-    
+
     return (set: any, get: any, api: any) => {
       const devtools = window.__REDUX_DEVTOOLS_EXTENSION__.connect({ name });
       const store = stateCreator(set, get, api);
-      
+
       devtools.init(get());
-      
+
       const originalSet = set;
       api.setState = (partial: any, replace?: boolean, action?: string) => {
         originalSet(partial, replace);
         devtools.send(action || "setState", get());
       };
-      
+
       devtools.subscribe((message: any) => {
         if (message.type === "DISPATCH" && message.state) {
           try {
@@ -83,7 +90,7 @@ export const createDevtoolsMiddleware = <T extends object>(
           }
         }
       });
-      
+
       return store;
     };
   };
@@ -109,40 +116,37 @@ export interface LoggerOptions {
 export const createLoggerMiddleware = <T extends object>(
   options: LoggerOptions = {}
 ) => {
-  const { 
+  const {
     enabled = process.env.NODE_ENV === "development",
     collapsed = true,
-    filter = () => true
+    filter = () => true,
   } = options;
-  
+
   return (stateCreator: StateCreator<T>) => {
     if (!enabled) return stateCreator;
-    
+
     return (set: any, get: any, api: any) => {
       const store = stateCreator(set, get, api);
-      
+
       const originalSet = set;
       api.setState = (partial: any, replace?: boolean, action = "setState") => {
         const prevState = get();
         originalSet(partial, replace);
         const nextState = get();
-        
+
         if (filter(action, nextState)) {
           const groupName = `🏪 ${action} @ ${new Date().toLocaleTimeString()}`;
-          
+
           if (collapsed) {
             console.groupCollapsed(groupName);
           } else {
             console.group(groupName);
           }
-          
-          console.log("Previous State:", prevState);
-          console.log("Action:", action);
-          console.log("Next State:", nextState);
+
           console.groupEnd();
         }
       };
-      
+
       return store;
     };
   };

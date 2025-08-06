@@ -56,6 +56,13 @@ export function VariableStatusCards() {
     setSelectedVariableInfo,
     setCombustionApiData,
     combustionApiData,
+    // 분리된 API 데이터 관리
+    setSwirlChartApiData,
+    setTemperatureDeviationApiData,
+    setCombustionPressureApiData,
+    swirlChartApiData,
+    temperatureDeviationApiData,
+    combustionPressureApiData,
   } = ui;
 
   const [isLoadingCombustionData, setIsLoadingCombustionData] = useState(false);
@@ -96,21 +103,13 @@ export function VariableStatusCards() {
       const endTime = formatTimeToISO(date, end);
       const variableGroupEng = mapVariableGroupToEnglish(groupTitle);
 
-      console.log(`API 호출: ${groupTitle} 그룹 선택됨`);
-      console.log(`사이클 시간: ${startTime} ~ ${endTime}`);
-      console.log(`변수 그룹: ${variableGroupEng}`);
-
       try {
         setIsLoadingCombustionData(true);
         setApiError(null);
 
-        const response = await CyclesAPI.getCombustionDataByCycle(
-          startTime,
-          endTime
-        );
+        const response = await CyclesAPI.GetSwirlChartData(startTime, endTime);
 
         if (response.success) {
-          console.log("API 호출 성공:", response.data);
           // 여기에서 필요한 경우 응답 데이터를 상태에 저장할 수 있습니다
         } else {
           console.error("API 호출 실패:", response.error);
@@ -152,29 +151,70 @@ export function VariableStatusCards() {
         const { date, start, end } = timeline.selectedCycle!;
         const startTime = formatTimeToISO(date, start);
         const endTime = formatTimeToISO(date, end);
-        const variableGroupEng = mapVariableGroupToEnglish(
-          selectedVariableGroup
-        );
-
-        console.log(`자동 API 호출: ${selectedVariableGroup} 그룹`);
-        console.log(`사이클 시간: ${startTime} ~ ${endTime}`);
-        console.log(`변수 그룹: ${variableGroupEng}`);
 
         try {
           setIsLoadingCombustionData(true);
           setApiError(null);
 
-          const response = await CyclesAPI.getCombustionDataByCycle(
-            startTime,
-            endTime
-          );
+          // 연소 그룹이 선택되었을 때 세 가지 차트 데이터 모두 호출
+          if (selectedVariableGroup === "연소") {
+            // 1. Swirl Chart (배기 온도) 데이터
+            const swirlResponse = await CyclesAPI.GetSwirlChartSpecificData(
+              startTime,
+              endTime
+            );
 
-          if (response.success) {
-            console.log("자동 API 호출 성공:", response.data);
-            setCombustionApiData(response.data);
+            if (swirlResponse.success) {
+              setSwirlChartApiData(swirlResponse.data);
+            } else {
+              console.error("Swirl Chart API 호출 실패:", swirlResponse.error);
+            }
+
+            // 2. 온도 편차 차트 데이터
+            const temperatureResponse =
+              await CyclesAPI.GetTemperatureDeviationData(startTime, endTime);
+
+            if (temperatureResponse.success) {
+              setTemperatureDeviationApiData(temperatureResponse.data);
+            } else {
+              console.error(
+                "Temperature Deviation API 호출 실패:",
+                temperatureResponse.error
+              );
+            }
+
+            // 3. 연소 동압 차트 데이터
+            const pressureResponse = await CyclesAPI.GetCombustionPressureData(
+              startTime,
+              endTime
+            );
+
+            if (pressureResponse.success) {
+              setCombustionPressureApiData(pressureResponse.data);
+            } else {
+              console.error(
+                "Combustion Pressure API 호출 실패:",
+                pressureResponse.error
+              );
+            }
+
+            // 하위 호환성을 위해 Swirl 데이터를 기본 combustionApiData에도 저장
+            if (swirlResponse.success) {
+              setCombustionApiData(swirlResponse.data);
+            }
           } else {
-            console.error("자동 API 호출 실패:", response.error);
-            setApiError(response.error || "API 호출에 실패했습니다");
+            // 다른 그룹은 기존 방식 사용
+            const response = await CyclesAPI.GetSwirlChartData(
+              startTime,
+              endTime
+            );
+
+            if (response.success) {
+              setCombustionApiData(response.data);
+            } else {
+              console.error("기존 API 호출 실패:", response.error);
+              setApiError(response.error || "API 호출에 실패했습니다");
+            }
           }
         } catch (error) {
           console.error("자동 API 호출 중 오류:", error);

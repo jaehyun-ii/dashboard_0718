@@ -86,38 +86,28 @@ export const SwirlChart = React.memo(
 
     // Extract T1-T27 data from API and compute 11G_DWATT for selected time
     const extractApiData = useMemo(() => {
-      console.log("=== API Data Debug (Time-based) ===");
-      console.log("Raw apiData:", apiData);
-      console.log("Selected time:", selectedTime);
-      console.log("Selected cycle:", selectedCycle);
-
       if (!apiData || !Array.isArray(apiData) || apiData.length === 0) {
-        console.log("No API time-series data available");
         return null;
       }
 
       // 선택된 시간에 해당하는 데이터 포인트 찾기
       let timeIndex = 0;
-      
+
       if (selectedTime !== undefined && selectedCycle) {
         // 사이클 진행률 계산 (0-1)
         const cycleDuration = selectedCycle.end - selectedCycle.start;
         const timeFromStart = selectedTime - selectedCycle.start;
-        const cycleProgress = cycleDuration > 0 ? Math.max(0, Math.min(1, timeFromStart / cycleDuration)) : 0;
-        
+        const cycleProgress =
+          cycleDuration > 0
+            ? Math.max(0, Math.min(1, timeFromStart / cycleDuration))
+            : 0;
+
         // API 데이터 배열에서 해당 시점의 인덱스 계산
         timeIndex = Math.floor(cycleProgress * (apiData.length - 1));
-        console.log(`Cycle progress: ${(cycleProgress * 100).toFixed(1)}%, Time index: ${timeIndex}/${apiData.length - 1}`);
       }
 
       // 해당 시점의 데이터 객체 가져오기
       const dataObj = apiData[timeIndex];
-      console.log(`Selected data object (index ${timeIndex}):`, dataObj);
-
-      if (!dataObj || typeof dataObj !== "object") {
-        console.log("No valid data object found at selected time");
-        return null;
-      }
 
       // T1-T27 변수들을 추출
       const temperatureData: number[] = [];
@@ -137,10 +127,6 @@ export const SwirlChart = React.memo(
             break;
           }
         }
-
-        if (i <= 3) { // 처음 3개만 로그
-          console.log(`T${i} - Found key: ${foundKey}, value: ${value}`);
-        }
         temperatureData.push(value);
       }
 
@@ -151,13 +137,12 @@ export const SwirlChart = React.memo(
 
       for (const name of dwattPossibleNames) {
         if (dataObj[name] !== undefined) {
-          dwatt = typeof dataObj[name] === "number" ? dataObj[name] : formulaInput;
+          dwatt =
+            typeof dataObj[name] === "number" ? dataObj[name] : formulaInput;
           dwattFoundKey = name;
           break;
         }
       }
-
-      console.log(`DWATT - Found key: ${dwattFoundKey}, value: ${dwatt}`);
 
       const result = {
         temperatureData,
@@ -165,9 +150,6 @@ export const SwirlChart = React.memo(
         timeIndex,
         totalDataPoints: apiData.length,
       };
-
-      console.log("Final time-based extracted data:", result);
-      console.log("=== End API Data Debug ===");
 
       return result;
     }, [apiData, formulaInput, selectedTime, selectedCycle]);
@@ -407,7 +389,7 @@ export const SwirlChart = React.memo(
     const tooltipFontSize = Math.max(10, dimensions.width / 42);
 
     return (
-      <div className={`w-full space-y-4 ${className}`}>
+      <div className={`w-auto space-y-4 ${className}`}>
         {/* API 데이터 값 표시 섹션 */}
         <div className="bg-slate-50 rounded-lg p-4 border">
           <div className="grid grid-cols-2 gap-4">
@@ -445,7 +427,8 @@ export const SwirlChart = React.memo(
                 {(data.reduce((a, b) => a + b, 0) / data.length).toFixed(1)}°C
                 {extractApiData && (
                   <span className="ml-2 text-blue-600 font-medium">
-                    | 데이터: {extractApiData.timeIndex + 1}/{extractApiData.totalDataPoints}
+                    | 데이터: {extractApiData.timeIndex + 1}/
+                    {extractApiData.totalDataPoints}
                   </span>
                 )}
               </div>
@@ -488,8 +471,8 @@ export const SwirlChart = React.memo(
         {/* Swirl Chart */}
         <div
           ref={containerRef}
-          className="w-full h-auto"
-          style={{ maxWidth: "100%", aspectRatio: "1" }}
+          className="w-auto h-auto"
+          style={{ maxWidth: "50%", aspectRatio: "1" }}
         >
           <svg
             width={dimensions.width}

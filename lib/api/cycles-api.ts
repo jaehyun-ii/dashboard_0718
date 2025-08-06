@@ -351,7 +351,7 @@ export class CyclesAPI {
   }
 
   // Get combustion data by cycle with variable group filter
-  static async getCombustionDataByCycle(
+  static async GetSwirlChartData(
     startTime: string,
     endTime: string
   ): Promise<ApiResponse<any>> {
@@ -360,7 +360,94 @@ export class CyclesAPI {
       end_time: endTime,
     });
 
-    const endpoint = `/data/combustion?${searchParams.toString()}`;
+    const endpoint = `/data/swirl?${searchParams.toString()}`;
+
+    try {
+      const response = await this.request<any>(endpoint, {
+        method: "GET",
+      });
+
+      return {
+        success: true,
+        data: response,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: formatApiError(error),
+      };
+    }
+  }
+
+  // 분리된 API 호출 - Swirl Chart (배기 온도) 데이터만 가져오기
+  static async GetSwirlChartSpecificData(
+    startTime: string,
+    endTime: string
+  ): Promise<ApiResponse<any>> {
+    const searchParams = new URLSearchParams({
+      start_time: startTime,
+      end_time: endTime,
+    });
+
+    const endpoint = `/data/swirl?${searchParams.toString()}`;
+
+    try {
+      const response = await this.request<any>(endpoint, {
+        method: "GET",
+      });
+
+      return {
+        success: true,
+        data: response,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: formatApiError(error),
+      };
+    }
+  }
+
+  // 분리된 API 호출 - 온도 편차 차트 데이터
+  static async GetTemperatureDeviationData(
+    startTime: string,
+    endTime: string
+  ): Promise<ApiResponse<any>> {
+    const searchParams = new URLSearchParams({
+      start_time: startTime,
+      end_time: endTime,
+    });
+
+    const endpoint = `/data/deviation?${searchParams.toString()}`;
+
+    try {
+      const response = await this.request<any>(endpoint, {
+        method: "GET",
+      });
+
+      return {
+        success: true,
+        data: response,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: formatApiError(error),
+      };
+    }
+  }
+
+  // 분리된 API 호출 - 연소 동압 차트 데이터
+  static async GetCombustionPressureData(
+    startTime: string,
+    endTime: string
+  ): Promise<ApiResponse<any>> {
+    const searchParams = new URLSearchParams({
+      start_time: startTime,
+      end_time: endTime,
+    });
+
+    const endpoint = `/data/combustion-pressure?${searchParams.toString()}`;
 
     try {
       const response = await this.request<any>(endpoint, {
@@ -495,14 +582,6 @@ const transformBackendCycleToFrontend = (
       .toString()
       .padStart(2, "0")}`;
   };
-
-  console.log(
-    `Cycle ${backendCycle.cycle_number}: ${date} ${formatMinutesToTime(
-      startMinutes
-    )}-${formatMinutesToTime(endMinutes)} (원본: ${backendCycle.start_time} ~ ${
-      backendCycle.end_time
-    })`
-  );
 
   return {
     id: `cycle-${backendCycle.data_id}`,

@@ -22,7 +22,6 @@ export function Sidebar() {
 
   const handleMenuClick = (itemId: string) => {
     setActiveMenuItem(itemId);
-    console.log(`Navigating to: ${itemId}`);
   };
 
   return (

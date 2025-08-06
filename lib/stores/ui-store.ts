@@ -32,7 +32,12 @@ interface UIState {
     refreshInterval: number;
   };
 
-  // API 데이터 저장
+  // API 데이터 저장 - 차트별로 분리
+  swirlChartApiData: any;        // 배기 온도 (Swirl Chart) 데이터
+  temperatureDeviationApiData: any;  // 온도 편차 차트 데이터
+  combustionPressureApiData: any;    // 연소 동압 차트 데이터
+  
+  // 기존 통합 데이터 (하위 호환성)
   combustionApiData: any;
 }
 
@@ -61,7 +66,12 @@ interface UIActions {
   updateViewPreferences: (prefs: Partial<UIState["viewPreferences"]>) => void;
   resetViewPreferences: () => void;
   
-  // API 데이터 관리
+  // API 데이터 관리 - 차트별로 분리
+  setSwirlChartApiData: (data: any) => void;
+  setTemperatureDeviationApiData: (data: any) => void;
+  setCombustionPressureApiData: (data: any) => void;
+  
+  // 기존 통합 데이터 (하위 호환성)
   setCombustionApiData: (data: any) => void;
   
   resetUIState: () => void;
@@ -107,6 +117,13 @@ export const useUIStore = create<UIStore>()(
       modals: defaultModals,
       filters: defaultFilters,
       viewPreferences: defaultViewPreferences,
+      
+      // API 데이터 저장 - 차트별로 분리
+      swirlChartApiData: null,
+      temperatureDeviationApiData: null,
+      combustionPressureApiData: null,
+      
+      // 기존 통합 데이터 (하위 호환성)
       combustionApiData: null,
 
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
@@ -163,6 +180,12 @@ export const useUIStore = create<UIStore>()(
       
       resetViewPreferences: () => set({ viewPreferences: defaultViewPreferences }),
       
+      // API 데이터 관리 - 차트별로 분리
+      setSwirlChartApiData: (data) => set({ swirlChartApiData: data }),
+      setTemperatureDeviationApiData: (data) => set({ temperatureDeviationApiData: data }),
+      setCombustionPressureApiData: (data) => set({ combustionPressureApiData: data }),
+      
+      // 기존 통합 데이터 (하위 호환성)
       setCombustionApiData: (data) => set({ combustionApiData: data }),
       
       resetUIState: () => set({
@@ -176,6 +199,11 @@ export const useUIStore = create<UIStore>()(
         showCycleDetails: false,
         modals: defaultModals,
         filters: defaultFilters,
+        
+        // API 데이터 초기화
+        swirlChartApiData: null,
+        temperatureDeviationApiData: null,
+        combustionPressureApiData: null,
         combustionApiData: null,
       }),
 
