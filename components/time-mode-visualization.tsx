@@ -95,6 +95,21 @@ export const TimeModeVisualization = React.memo<TimeModeVisualizationProps>(
       return ((time - min) / (max - min)) * 100;
     };
 
+    // 시간을 hh:mm 형식으로 변환하는 함수 (입력: 총 분)
+    const formatTime = (totalMinutes: number) => {
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = Math.round(totalMinutes % 60);
+
+      if (minutes === 60) {
+        return `${String(hours + 1).padStart(2, "0")}:00`;
+      }
+
+      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+        2,
+        "0"
+      )}`;
+    };
+
     // 현재 시간이 포함된 모드 찾기
     const currentMode = useMemo(() => {
       return actualModeSegments.find(
@@ -151,8 +166,8 @@ export const TimeModeVisualization = React.memo<TimeModeVisualizationProps>(
                       <>
                         <div className="font-bold text-sm">{segment.mode}</div>
                         <div className="text-xs opacity-90">
-                          {segment.startTime.toFixed(1)} -{" "}
-                          {segment.endTime.toFixed(1)}
+                          {formatTime(segment.startTime)} -{" "}
+                          {formatTime(segment.endTime)}
                         </div>
                       </>
                     ) : width > 3 ? ( // 3-8%일 때는 모드명만
@@ -177,42 +192,6 @@ export const TimeModeVisualization = React.memo<TimeModeVisualizationProps>(
                 <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-lg z-30"></div>
               </div>
             )}
-          </div>
-        </div>
-
-        {/* 모드 범례 */}
-        <div className="mt-4 px-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-            {actualModeSegments.map((segment, index) => {
-              const isActive =
-                currentTime >= segment.startTime &&
-                currentTime <= segment.endTime;
-              return (
-                <div
-                  key={index}
-                  className={cn(
-                    "flex items-center gap-2 p-2 rounded-md border transition-all duration-200",
-                    isActive
-                      ? "bg-white border-slate-300 shadow-sm"
-                      : "bg-slate-50 border-slate-200 opacity-70"
-                  )}
-                >
-                  <div
-                    className={cn("w-3 h-3 rounded-sm", segment.color)}
-                  ></div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-medium text-slate-700">
-                      {segment.mode}
-                    </div>
-                    {segment.description && (
-                      <div className="text-xs text-slate-500 truncate">
-                        {segment.description}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
           </div>
         </div>
       </div>

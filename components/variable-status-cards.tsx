@@ -1,10 +1,11 @@
 "use client";
 
 import type React from "react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTimelineStore, useUIStore } from "@/lib/stores";
 import { Vibrate, Flame, Zap, Cpu } from "lucide-react";
 import type { VariableInfo } from "@/lib/data";
+import { CyclesAPI } from "@/lib/api/cycles-api";
 
 const getGroupDetails = (group: string) => {
   switch (group) {
@@ -55,8 +56,71 @@ export function VariableStatusCards() {
     setSelectedVariableInfo,
   } = ui;
 
-  const handleGroupClick = (groupTitle: string) => {
+  const [isLoadingCombustionData, setIsLoadingCombustionData] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+
+  // 변수 그룹 한국어를 영어로 매핑
+  const mapVariableGroupToEnglish = (koreanGroup: string): string => {
+    switch (koreanGroup) {
+      case "진동":
+        return "vibration";
+      case "연소":
+        return "combustion";
+      case "전기":
+        return "electrical";
+      case "단위기기":
+        return "unit_device";
+      default:
+        return koreanGroup.toLowerCase();
+    }
+  };
+
+  // 분 단위 시간을 ISO datetime 문자열로 변환
+  const formatTimeToISO = (date: string, minutes: number): string => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${date}T${hours.toString().padStart(2, "0")}:${mins
+      .toString()
+      .padStart(2, "0")}:00Z`;
+  };
+
+  const handleGroupClick = async (groupTitle: string) => {
     setSelectedVariableGroup(groupTitle);
+
+    // API 호출을 위한 데이터 준비
+    if (timeline.selectedCycle) {
+      const { date, start, end } = timeline.selectedCycle;
+      const startTime = formatTimeToISO(date, start);
+      const endTime = formatTimeToISO(date, end);
+      const variableGroupEng = mapVariableGroupToEnglish(groupTitle);
+
+      console.log(`API 호출: ${groupTitle} 그룹 선택됨`);
+      console.log(`사이클 시간: ${startTime} ~ ${endTime}`);
+      console.log(`변수 그룹: ${variableGroupEng}`);
+
+      try {
+        setIsLoadingCombustionData(true);
+        setApiError(null);
+
+        const response = await CyclesAPI.getCombustionDataByCycle(
+          startTime,
+          endTime
+        );
+
+        if (response.success) {
+          console.log("API 호출 성공:", response.data);
+          // 여기에서 필요한 경우 응답 데이터를 상태에 저장할 수 있습니다
+        } else {
+          console.error("API 호출 실패:", response.error);
+          setApiError(response.error || "API 호출에 실패했습니다");
+        }
+      } catch (error) {
+        console.error("API 호출 중 오류:", error);
+        setApiError("API 호출 중 오류가 발생했습니다");
+      } finally {
+        setIsLoadingCombustionData(false);
+      }
+    }
   };
 
   const handleVariableClick = (variable: VariableInfo, e: React.MouseEvent) => {
@@ -107,10 +171,23 @@ export function VariableStatusCards() {
       <div className="flex items-center mb-6">
         <h2 className="text-4xl font-bold text-slate-800 ">이상탐지 변수</h2>
         {/* 선택된 사이클 정보 출력 */}
-        <div className="flex">
+        <div className="flex items-center">
           <div className="px-3 py-2 bg-blue-100 text-blue-800 rounded-full text-lg font-medium ml-3">
             변수 표시 대상: {timeline.selectedCycle?.name || "없음"}
           </div>
+          {/* API 로딩 상태 표시 */}
+          {isLoadingCombustionData && (
+            <div className="ml-3 px-3 py-2 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-yellow-600 border-t-transparent mr-2"></div>
+              API 호출 중...
+            </div>
+          )}
+          {/* API 에러 상태 표시 */}
+          {apiError && (
+            <div className="ml-3 px-3 py-2 bg-red-100 text-red-800 rounded-full text-sm font-medium">
+              오류: {apiError}
+            </div>
+          )}
         </div>
       </div>
       <div className="grid grid-cols-4 gap-6 max-w-full">
