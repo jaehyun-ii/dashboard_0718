@@ -199,6 +199,13 @@ export const DeviationChart = React.memo<DeviationChartProps>(
                 ? "API에서 데이터를 가져오는 중..."
                 : "사이클을 선택하세요"}
             </div>
+            {/* 디버깅 정보 */}
+            <div className="mt-4 p-3 bg-gray-100 rounded text-xs text-left">
+              <div><strong>디버깅 정보:</strong></div>
+              <div>API Data: {apiData ? (Array.isArray(apiData) ? `Array(${apiData.length})` : typeof apiData) : 'null'}</div>
+              <div>Selected Cycle: {selectedCycle ? selectedCycle.name : 'null'}</div>
+              <div>Selected Time: {selectedTime}</div>
+            </div>
           </div>
         </div>
       );
@@ -284,16 +291,6 @@ export const DeviationChart = React.memo<DeviationChartProps>(
                 }
                 wrapperStyle={{ fontSize: "12px" }}
               />
-
-              {/* 온도 제한선 (TTXSPL) */}
-              {statistics?.TTXSPL && (
-                <ReferenceLine
-                  y={statistics.TTXSPL.avg}
-                  stroke={TEMPERATURE_COLORS.TTXSPL}
-                  strokeDasharray="5 5"
-                  label={{ value: "온도 제한 평균", fontSize: 15 }}
-                />
-              )}
 
               {/* 각 온도 변수별 라인 - 가시성에 따라 렌더링 */}
               {Object.entries(TEMPERATURE_COLORS).map(([variable, color]) =>

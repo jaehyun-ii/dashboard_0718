@@ -440,14 +440,16 @@ export class CyclesAPI {
   // 분리된 API 호출 - 연소 동압 차트 데이터
   static async GetCombustionPressureData(
     startTime: string,
-    endTime: string
+    endTime: string,
+    bandType: string
   ): Promise<ApiResponse<any>> {
     const searchParams = new URLSearchParams({
       start_time: startTime,
       end_time: endTime,
+      band_type: bandType,
     });
 
-    const endpoint = `/data/combustion-pressure?${searchParams.toString()}`;
+    const endpoint = `/data/pressure?${searchParams.toString()}`;
 
     try {
       const response = await this.request<any>(endpoint, {

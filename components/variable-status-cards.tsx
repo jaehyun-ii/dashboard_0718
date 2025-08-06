@@ -186,7 +186,8 @@ export function VariableStatusCards() {
             // 3. 연소 동압 차트 데이터
             const pressureResponse = await CyclesAPI.GetCombustionPressureData(
               startTime,
-              endTime
+              endTime,
+              "blowout"
             );
 
             if (pressureResponse.success) {
