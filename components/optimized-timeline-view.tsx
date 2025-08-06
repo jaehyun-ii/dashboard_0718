@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useTimelineStore, useUIStore } from "@/lib/stores";
-import { timelineData, CycleInfo } from "@/lib/data";
+import { CycleInfo } from "@/lib/data";
 import { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import {
   CalendarIcon,
@@ -76,14 +76,22 @@ export function OptimizedTimelineView() {
         selectedDateRange.from,
         selectedDateRange.to
       );
+
+      // 2시간 간격으로 그리드 생성 (12칸)
       const grid = dates.flatMap((date) =>
-        Array.from({ length: 12 }, (_, i) => ({ date, hour: i * 2 }))
+        Array.from({ length: 12 }, (_, i) => ({
+          date,
+          hour: i * 2, // 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22
+          minute: 0,
+          totalMinutes: i * 2 * 60, // 분 단위로 변환
+          timeLabel: `${(i * 2).toString().padStart(2, "0")}:00`,
+        }))
       );
-      const width = grid.length * 100;
+      const width = grid.length * 80; // 2시간 간격이므로 더 넓은 셀 (80px)
 
       const fromDate = new Date(`${selectedDateRange.from}T00:00:00Z`);
       const toDate = new Date(`${selectedDateRange.to}T00:00:00Z`);
-      const cycles = timelineData.cycles.filter((cycle) => {
+      const cycles = timeline.cycles.filter((cycle) => {
         const cycleDate = new Date(`${cycle.date}T00:00:00Z`);
         return cycleDate >= fromDate && cycleDate <= toDate;
       });
@@ -142,7 +150,9 @@ export function OptimizedTimelineView() {
       const scrollContainer = scrollContainerRef.current;
 
       const timeout = setTimeout(() => {
-        const selector = `[data-time-cell="${date}-${time}"]`;
+        // 2시간 간격으로 가장 가까운 셀 찾기
+        const nearestTimeSlot = Math.floor(time / 120) * 120; // 2시간(120분) 단위로 반올림
+        const selector = `[data-time-cell="${date}-${nearestTimeSlot}"]`;
         const cellElement =
           scrollContainer.querySelector<HTMLDivElement>(selector);
 
@@ -153,13 +163,32 @@ export function OptimizedTimelineView() {
           const maxScrollLeft = scrollContainer.scrollWidth - containerWidth;
 
           // 중앙 정렬 위치 계산
-          const scrollTo = cellOffset - containerWidth / 2 + cellWidth / 2;
+          const scrollToPosition =
+            cellOffset - containerWidth / 2 + cellWidth / 2;
 
           // 오버스크롤 방지
           scrollContainer.scrollTo({
-            left: Math.min(Math.max(scrollTo, 0), maxScrollLeft),
+            left: Math.min(Math.max(scrollToPosition, 0), maxScrollLeft),
             behavior: "smooth",
           });
+        } else {
+          // 셀을 찾지 못한 경우, 분 단위 시간을 기준으로 대략적인 위치로 스크롤
+          const dateIndex = currentWeekDates.indexOf(date);
+          if (dateIndex !== -1) {
+            const minutesPerDay = 24 * 60;
+            const dayWidth = 12 * 80; // 2시간 간격 12칸 × 80px
+            const pixelsPerMinute = dayWidth / minutesPerDay;
+            const approximatePosition =
+              dateIndex * dayWidth + time * pixelsPerMinute;
+
+            scrollContainer.scrollTo({
+              left: Math.max(
+                0,
+                approximatePosition - scrollContainer.clientWidth / 2
+              ),
+              behavior: "smooth",
+            });
+          }
         }
 
         setScrollTo(null);
@@ -167,7 +196,7 @@ export function OptimizedTimelineView() {
 
       return () => clearTimeout(timeout);
     }
-  }, [scrollTo, setScrollTo]);
+  }, [scrollTo, setScrollTo, currentWeekDates]);
 
   useEffect(() => {
     if (scrollContainerRef.current) {
@@ -267,9 +296,7 @@ export function OptimizedTimelineView() {
                       mode="single"
                       selected={selectedDate}
                       onSelect={setSelectedDate}
-                      disabled={(date) =>
-                        !timelineData.dates.includes(format(date, "yyyy-MM-dd"))
-                      }
+                      disabled={() => false}
                     />
                   </PopoverContent>
                 </Popover>
@@ -279,9 +306,9 @@ export function OptimizedTimelineView() {
                   onChange={(e) => setSelectedTime(Number(e.target.value))}
                   className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-lg font-medium"
                 >
-                  {Array.from({ length: 12 }, (_, i) => i * 2).map((hour) => (
-                    <option key={hour} value={hour}>
-                      {hour}:00
+                  {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
+                    <option key={hour * 60} value={hour * 60}>
+                      {hour.toString().padStart(2, "0")}:00
                     </option>
                   ))}
                 </select>
@@ -346,22 +373,43 @@ export function OptimizedTimelineView() {
             </div>
 
             {/* 타임라인 그리드 출력 영역 */}
-            <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50">
+            <div className="border border-slate-300 rounded-2xl overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 shadow-xl">
               <div className="flex">
                 {/* 터빈 목록 */}
-                <div className="w-32 flex-shrink-0 bg-slate-100 border-r border-slate-200">
-                  <div className="h-12 flex items-center p-2 font-semibold text-slate-700 border-b border-slate-200 text-base">
+                <div className="w-36 flex-shrink-0 bg-gradient-to-b from-slate-100 to-slate-150 border-r border-slate-300">
+                  {/* 날짜 헤더 높이와 맞춤 */}
+                  <div className="h-10 flex items-center justify-center p-2 font-bold text-slate-800 border-b border-slate-300 bg-gradient-to-r from-blue-50 to-indigo-50 text-sm">
+                    날짜
+                  </div>
+                  {/* 시간 헤더 높이와 맞춤 */}
+                  <div className="h-10 flex items-center justify-center p-2 font-bold text-slate-800 border-b border-slate-300 bg-gradient-to-r from-blue-50 to-indigo-50 text-sm">
                     터빈
                   </div>
-                  {timelineData.turbines.map((turbine) => (
-                    <div
-                      key={turbine}
-                      className="h-12 flex items-center p-2 font-medium text-slate-700 border-t border-slate-200 bg-white"
-                    >
-                      <div className="w-2 h-2 rounded-full bg-purple-500 mr-2"></div>
-                      <span className="text-base truncate">{turbine}</span>
-                    </div>
-                  ))}
+                  {["Turbine A", "Turbine B", "Turbine C", "Turbine D"].map(
+                    (turbine, index) => (
+                      <div
+                        key={turbine}
+                        className={`h-14 flex items-center p-3 font-semibold text-slate-800 border-t border-slate-200 transition-colors duration-200 hover:bg-slate-100 ${
+                          index % 2 === 0 ? "bg-white" : "bg-slate-50"
+                        }`}
+                      >
+                        <div
+                          className={`w-3 h-3 rounded-full mr-3 ${
+                            index === 0
+                              ? "bg-blue-500"
+                              : index === 1
+                              ? "bg-green-500"
+                              : index === 2
+                              ? "bg-purple-500"
+                              : "bg-orange-500"
+                          } shadow-sm`}
+                        ></div>
+                        <span className="text-sm font-medium truncate">
+                          {turbine}
+                        </span>
+                      </div>
+                    )
+                  )}
                 </div>
 
                 {/* 시간표 본문 */}
@@ -382,27 +430,30 @@ export function OptimizedTimelineView() {
                   >
                     <div className="flex flex-col">
                       {/* 날짜 헤더 */}
-                      <div className="flex h-8 border-b border-slate-200">
+                      <div className="flex h-10 border-b border-slate-300">
                         {currentWeekDates.map((date) => (
                           <div
                             key={date}
-                            className="text-center p-1 font-semibold text-slate-600 border-r border-slate-200 bg-slate-100"
-                            style={{ width: `${12 * 100}px` }}
+                            className="text-center p-2 font-bold text-slate-800 border-r border-slate-200 bg-gradient-to-r from-blue-50 to-indigo-50"
+                            style={{ width: `${12 * 80}px` }}
                           >
-                            <div className="text-base">{date}</div>
+                            <div className="text-sm">{date}</div>
                           </div>
                         ))}
                       </div>
 
-                      {/* 시간 헤더 */}
-                      <div className="flex h-8 border-b border-slate-200">
-                        {timeGrid.map(({ date, hour }) => (
+                      {/* 시간 헤더 - 2시간 간격 */}
+                      <div className="flex h-12 border-b border-slate-300 bg-gradient-to-r from-slate-50 to-slate-100">
+                        {timeGrid.map(({ date, hour, totalMinutes }) => (
                           <div
-                            key={`${date}-${hour}`}
-                            data-time-cell={`${date}-${hour}`} // ✅ 중요!
-                            className="w-[100px] flex-shrink-0 text-center p-1 font-semibold text-slate-500 border-r border-slate-200 bg-slate-100"
+                            key={`${date}-${totalMinutes}`}
+                            data-time-cell={`${date}-${totalMinutes}`}
+                            className="flex-shrink-0 text-center border-r border-slate-300 bg-white text-slate-800 hover:bg-blue-50 transition-colors"
+                            style={{ width: "80px" }}
                           >
-                            <div className="text-base">{hour}:00</div>
+                            <div className="py-2 text-sm font-semibold">
+                              {hour.toString().padStart(2, "0")}:00
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -410,62 +461,125 @@ export function OptimizedTimelineView() {
 
                     {/* 터빈별 사이클 표시 */}
                     <div className="flex flex-col bg-white">
-                      {timelineData.turbines.map((turbine) => (
-                        <div
-                          key={turbine}
-                          className="relative h-12 border-t border-slate-200"
-                        >
-                          {/* 세로 라인 */}
-                          {timeGrid.map((_, index) => (
-                            <div
-                              key={index}
-                              className="absolute top-0 bottom-0 w-px bg-slate-200"
-                              style={{ left: `${(index + 1) * 100}px` }}
-                            />
-                          ))}
+                      {["Turbine A", "Turbine B", "Turbine C", "Turbine D"].map(
+                        (turbine) => (
+                          <div
+                            key={turbine}
+                            className="relative h-14 border-t border-slate-200"
+                          >
+                            {/* 세로 라인 */}
+                            {timeGrid.map((_, index) => (
+                              <div
+                                key={index}
+                                className="absolute top-0 bottom-0 w-px bg-slate-200"
+                                style={{ left: `${(index + 1) * 80}px` }}
+                              />
+                            ))}
 
-                          {/* 사이클 바 */}
-                          {cyclesForWeek
-                            .filter((c) => c.turbine === turbine)
-                            .map((cycle) => {
-                              const dateIndex = currentWeekDates.indexOf(
-                                cycle.date
-                              );
-                              if (dateIndex === -1) return null;
+                            {/* 사이클 바 */}
+                            {cyclesForWeek
+                              .filter((c) => c.turbine === turbine)
+                              .map((cycle) => {
+                                const dateIndex = currentWeekDates.indexOf(
+                                  cycle.date
+                                );
+                                if (dateIndex === -1) return null;
 
-                              const startPosition =
-                                (dateIndex * 12 + cycle.start / 2) * 100;
-                              const width =
-                                ((cycle.end - cycle.start) / 2) * 100;
-                              const isSelected = selectedCycle?.id === cycle.id;
+                                // 분 단위로 정확한 위치와 크기 계산 (2시간 간격)
+                                const minutesPerDay = 24 * 60; // 1440분
+                                const dayWidth = 12 * 80; // 2시간 간격 12칸 × 80px
+                                const pixelsPerMinute = dayWidth / minutesPerDay;
 
-                              return (
-                                <div
-                                  key={cycle.id}
-                                  className={`absolute top-1/2 -translate-y-1/2 h-10 bg-gradient-to-r ${
-                                    cycle.color
-                                  } rounded-lg flex items-center justify-center text-slate-800 font-semibold transition-all duration-200 shadow-md border border-white/20 cursor-pointer ${
-                                    isSelected
-                                      ? "ring-4 ring-blue-400 ring-opacity-75 scale-105 shadow-2xl z-10"
-                                      : "hover:scale-105 hover:shadow-lg"
-                                  }`}
-                                  style={{
-                                    left: `${startPosition}px`,
-                                    width: `${width}px`,
-                                  }}
-                                  onClick={() => handleCycleClick(cycle)}
-                                  title={`${cycle.name}: ${cycle.date} ${cycle.start}:00 - ${cycle.end}:00`}
-                                >
-                                  <div className="text-center px-2">
-                                    <div className="text-lg font-bold truncate">
-                                      {`${cycle.name} (${cycle.start}:00-${cycle.end}:00)`}
-                                    </div>
+                                const startPosition =
+                                  dateIndex * dayWidth +
+                                  cycle.start * pixelsPerMinute;
+                                const width =
+                                  (cycle.end - cycle.start) * pixelsPerMinute;
+                                const isSelected =
+                                  selectedCycle?.id === cycle.id;
+
+                                // 사이클 길이에 따른 텍스트 표시 조건
+                                const showFullText = width >= 120; // 120px 이상일 때 전체 텍스트
+                                const showShortText = width >= 60; // 60px 이상일 때 짧은 텍스트
+
+                                // 시간 포맷팅 함수
+                                const formatMinutesToTime = (
+                                  minutes: number
+                                ) => {
+                                  const hours = Math.floor(minutes / 60);
+                                  const mins = minutes % 60;
+                                  return `${hours
+                                    .toString()
+                                    .padStart(2, "0")}:${mins
+                                    .toString()
+                                    .padStart(2, "0")}`;
+                                };
+
+                                let displayText = "";
+                                if (showFullText) {
+                                  displayText = `${
+                                    cycle.name
+                                  } (${formatMinutesToTime(
+                                    cycle.start
+                                  )}-${formatMinutesToTime(cycle.end)})`;
+                                } else if (showShortText) {
+                                  displayText = cycle.name;
+                                } else {
+                                  displayText = cycle.name.replace(
+                                    "Cycle ",
+                                    "C"
+                                  );
+                                }
+
+                                // 색상이 없는 경우 기본 색상 적용
+                                const backgroundColor =
+                                  cycle.color || "bg-blue-500";
+
+                                return (
+                                  <div
+                                    key={cycle.id}
+                                    className={`absolute top-1/2 -translate-y-1/2 h-10 ${backgroundColor} rounded-lg flex items-center justify-center text-white font-semibold transition-all duration-200 shadow-md border border-white/20 cursor-pointer ${
+                                      isSelected
+                                        ? "ring-4 ring-blue-400 ring-opacity-75 scale-105 shadow-2xl z-10"
+                                        : "hover:scale-105 hover:shadow-lg"
+                                    }`}
+                                    style={{
+                                      left: `${startPosition}px`,
+                                      width: `${width}px`,
+                                      minWidth: "30px", // 최소 너비 보장
+                                    }}
+                                    onClick={() => handleCycleClick(cycle)}
+                                    title={`${cycle.name}: ${
+                                      cycle.date
+                                    } ${formatMinutesToTime(
+                                      cycle.start
+                                    )} - ${formatMinutesToTime(cycle.end)}`}
+                                  >
+                                    {width >= 30 && ( // 최소 30px 이상일 때만 텍스트 표시
+                                      <div
+                                        className={`text-center px-1 ${
+                                          width < 80 ? "px-0" : "px-2"
+                                        }`}
+                                      >
+                                        <div
+                                          className={`font-bold truncate ${
+                                            showFullText
+                                              ? "text-sm"
+                                              : width >= 60
+                                              ? "text-xs"
+                                              : "text-[10px]"
+                                          }`}
+                                        >
+                                          {displayText}
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
-                                </div>
-                              );
-                            })}
-                        </div>
-                      ))}
+                                );
+                              })}
+                          </div>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>

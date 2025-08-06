@@ -199,7 +199,10 @@ export const TimeSlider = React.memo<TimeSliderProps>(
                 max={max}
                 step={step}
                 disabled={disabled}
-                className="w-full"
+                className={cn(
+                  "w-full"
+                  // 아래 한 줄 추가: 핸들(썸)에 원형, 그림자, 흰 테두리 적용
+                )}
               />
 
               {/* 시간 포인트들 오버레이 */}

@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
 import { CycleDetailsModal } from "@/components/cycle-details-modal";
 import { useUIStore, useStoreCoordination } from "@/lib/stores";
+import { useTimelineStore } from "@/lib/stores/timeline-store";
 import {
   DashboardPage,
   PresentDetectionPage,
@@ -14,6 +16,21 @@ import ReportsManagementPage from "@/components/pages/reports-management-page";
 export default function MainPage() {
   // Initialize store coordination with proper cleanup
   useStoreCoordination();
+  
+  const { fetchRecentCycles } = useTimelineStore();
+  
+  // Load initial data from backend on app start
+  useEffect(() => {
+    const initializeData = async () => {
+      try {
+        await fetchRecentCycles();
+      } catch (error) {
+        console.error("Failed to load initial data:", error);
+      }
+    };
+    
+    initializeData();
+  }, [fetchRecentCycles]);
   
   const { activeMenuItem } = useUIStore();
 

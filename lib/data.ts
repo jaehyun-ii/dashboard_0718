@@ -72,7 +72,10 @@ export interface TurbinePerformanceData {
   efficiency: string;
 }
 
-export type ReportData = HealthSummary | CycleAnalysisData | TurbinePerformanceData;
+export type ReportData =
+  | HealthSummary
+  | CycleAnalysisData
+  | TurbinePerformanceData;
 
 export interface Report {
   id: string;
@@ -194,7 +197,7 @@ timelineData.cycles.push({
 timelineData.cycles.push({
   id: "test-short",
   name: "Test Short",
-  turbine: "Turbine A", 
+  turbine: "Turbine A",
   date: "2025-07-17",
   start: 12,
   end: 12.2,
@@ -207,7 +210,7 @@ timelineData.cycles.push({
   id: "test-medium",
   name: "Test Medium",
   turbine: "Turbine A",
-  date: "2025-07-17", 
+  date: "2025-07-17",
   start: 13,
   end: 14,
   color: "from-green-600 to-blue-600",
