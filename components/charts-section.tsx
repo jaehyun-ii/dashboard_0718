@@ -87,14 +87,21 @@ const groupDisplayData = {
 
 // Memoized chart renderer component
 const ChartRenderer = React.memo(
-  ({ title, currentTime }: { title: string; currentTime: number }) => {
+  ({ title, currentTime, combustionApiData, timeline }: { 
+    title: string; 
+    currentTime: number;
+    combustionApiData: any;
+    timeline: any;
+  }) => {
     switch (title) {
       case "배기 온도":
         return (
           <SwirlChart
+            cycleId={timeline.selectedCycle?.id || "default"}
+            apiData={combustionApiData}
             showControls={false}
-            cycleId="215"
             selectedTime={currentTime}
+            className="w-full"
           />
         );
       case "온도 편차":
@@ -116,8 +123,9 @@ const ChartRenderer = React.memo(
 ChartRenderer.displayName = "ChartRenderer";
 
 export const ChartsSection = React.memo(() => {
-  const { selectedVariableGroup } = useUIStore();
-  const { currentTime } = useTimelineStore();
+  const { selectedVariableGroup, combustionApiData } = useUIStore();
+  const timeline = useTimelineStore();
+  const { currentTime } = timeline;
 
   const handleChartClick = useCallback(
     (chart: ChartInfo) => {
@@ -167,7 +175,12 @@ export const ChartsSection = React.memo(() => {
               <h3 className="text-xl md:text-2xl font-bold text-slate-800 mb-4 md:mb-8">
                 {chart.title}
               </h3>
-              <ChartRenderer title={chart.title} currentTime={currentTime} />
+              <ChartRenderer 
+                title={chart.title} 
+                currentTime={currentTime} 
+                combustionApiData={combustionApiData}
+                timeline={timeline}
+              />
             </div>
           ))}
         </div>
@@ -200,6 +213,8 @@ export const ChartsSection = React.memo(() => {
               <ChartRenderer
                 title={charts[3].title}
                 currentTime={currentTime}
+                combustionApiData={combustionApiData}
+                timeline={timeline}
               />
             </div>
           </div>
@@ -237,7 +252,12 @@ export const ChartsSection = React.memo(() => {
             <h3 className="text-2xl font-bold text-slate-800 mb-8">
               {chart.title}
             </h3>
-            <ChartRenderer title={chart.title} currentTime={currentTime} />
+            <ChartRenderer 
+              title={chart.title} 
+              currentTime={currentTime} 
+              combustionApiData={combustionApiData}
+              timeline={timeline}
+            />
           </div>
         ))}
       </div>

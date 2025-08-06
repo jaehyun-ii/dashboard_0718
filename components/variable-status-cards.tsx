@@ -54,6 +54,8 @@ export function VariableStatusCards() {
     selectedVariableGroup,
     setSelectedVariableGroup,
     setSelectedVariableInfo,
+    setCombustionApiData,
+    combustionApiData,
   } = ui;
 
   const [isLoadingCombustionData, setIsLoadingCombustionData] = useState(false);
@@ -142,6 +144,49 @@ export function VariableStatusCards() {
       }
     }
   }, [timeline.selectedCycle, selectedVariableGroup, setSelectedVariableGroup]);
+
+  // Auto-fetch data when cycle or variable group changes
+  useEffect(() => {
+    if (timeline.selectedCycle && selectedVariableGroup) {
+      const fetchVariableGroupData = async () => {
+        const { date, start, end } = timeline.selectedCycle!;
+        const startTime = formatTimeToISO(date, start);
+        const endTime = formatTimeToISO(date, end);
+        const variableGroupEng = mapVariableGroupToEnglish(
+          selectedVariableGroup
+        );
+
+        console.log(`자동 API 호출: ${selectedVariableGroup} 그룹`);
+        console.log(`사이클 시간: ${startTime} ~ ${endTime}`);
+        console.log(`변수 그룹: ${variableGroupEng}`);
+
+        try {
+          setIsLoadingCombustionData(true);
+          setApiError(null);
+
+          const response = await CyclesAPI.getCombustionDataByCycle(
+            startTime,
+            endTime
+          );
+
+          if (response.success) {
+            console.log("자동 API 호출 성공:", response.data);
+            setCombustionApiData(response.data);
+          } else {
+            console.error("자동 API 호출 실패:", response.error);
+            setApiError(response.error || "API 호출에 실패했습니다");
+          }
+        } catch (error) {
+          console.error("자동 API 호출 중 오류:", error);
+          setApiError("API 호출 중 오류가 발생했습니다");
+        } finally {
+          setIsLoadingCombustionData(false);
+        }
+      };
+
+      fetchVariableGroupData();
+    }
+  }, [timeline.selectedCycle, selectedVariableGroup]);
 
   if (!timeline.selectedCycle) {
     return (

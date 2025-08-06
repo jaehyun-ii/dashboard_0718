@@ -360,7 +360,7 @@ export class CyclesAPI {
       end_time: endTime,
     });
 
-    const endpoint = `/combustion/cycle?${searchParams.toString()}`;
+    const endpoint = `/data/combustion?${searchParams.toString()}`;
 
     try {
       const response = await this.request<any>(endpoint, {

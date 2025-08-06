@@ -31,6 +31,9 @@ interface UIState {
     autoRefresh: boolean;
     refreshInterval: number;
   };
+
+  // API 데이터 저장
+  combustionApiData: any;
 }
 
 interface UIActions {
@@ -57,6 +60,9 @@ interface UIActions {
   
   updateViewPreferences: (prefs: Partial<UIState["viewPreferences"]>) => void;
   resetViewPreferences: () => void;
+  
+  // API 데이터 관리
+  setCombustionApiData: (data: any) => void;
   
   resetUIState: () => void;
 }
@@ -101,6 +107,7 @@ export const useUIStore = create<UIStore>()(
       modals: defaultModals,
       filters: defaultFilters,
       viewPreferences: defaultViewPreferences,
+      combustionApiData: null,
 
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
       
@@ -156,6 +163,8 @@ export const useUIStore = create<UIStore>()(
       
       resetViewPreferences: () => set({ viewPreferences: defaultViewPreferences }),
       
+      setCombustionApiData: (data) => set({ combustionApiData: data }),
+      
       resetUIState: () => set({
         sidebarOpen: true,
         activeMenuItem: "dashboard",
@@ -167,6 +176,7 @@ export const useUIStore = create<UIStore>()(
         showCycleDetails: false,
         modals: defaultModals,
         filters: defaultFilters,
+        combustionApiData: null,
       }),
 
       isModalOpen: (modal) => get().modals[modal],

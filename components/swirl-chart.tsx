@@ -49,6 +49,7 @@ export interface SwirlChartProps {
   showControls?: boolean;
   className?: string;
   selectedTime?: number;
+  apiData?: any; // API 데이터 추가
 }
 
 export const SwirlChart = React.memo(
@@ -59,6 +60,7 @@ export const SwirlChart = React.memo(
     showControls = true,
     className = "",
     selectedTime,
+    apiData,
   }: SwirlChartProps) => {
     const swirl = useDataStore((s) => s.getSwirlDataByCycle(cycleId));
     const containerRef = useRef<HTMLDivElement>(null);
@@ -81,9 +83,37 @@ export const SwirlChart = React.memo(
       return () => window.removeEventListener("resize", handleResize);
     }, []);
 
+    // Extract T1-T27 data from API and compute 11G_DWATT
+    const extractApiData = useMemo(() => {
+      if (!apiData) return null;
+      
+      // T1-T27 변수들을 추출 (11G_TTXD1_1 ~ 11G_TTXD1_27)
+      const temperatureData: number[] = [];
+      for (let i = 1; i <= 27; i++) {
+        const variableName = `11G_TTXD1_${i}`;
+        const value = apiData[variableName];
+        temperatureData.push(typeof value === 'number' ? value : 0);
+      }
+      
+      // 11G_DWATT 계산 (equation 변수)
+      const dwatt = apiData['11G_DWATT'] || formulaInput;
+      
+      return {
+        temperatureData,
+        dwatt
+      };
+    }, [apiData, formulaInput]);
+
     // Memoize expensive data processing
     const { data, maxVal, scaled } = useMemo(() => {
-      let rawData = swirl?.[0]?.sensors.map((s) => s.value) ?? DEFAULT_DATA;
+      let rawData: number[];
+      
+      // API 데이터가 있으면 사용, 없으면 기존 데이터 사용
+      if (extractApiData && extractApiData.temperatureData.length === 27) {
+        rawData = extractApiData.temperatureData;
+      } else {
+        rawData = swirl?.[0]?.sensors.map((s) => s.value) ?? DEFAULT_DATA;
+      }
       
       // If selectedTime is provided, adjust the data based on time
       if (selectedTime !== undefined) {
@@ -99,19 +129,22 @@ export const SwirlChart = React.memo(
         maxVal: maxValue,
         scaled: scaledData,
       };
-    }, [swirl, selectedTime]);
+    }, [swirl, selectedTime, extractApiData]);
 
     const computedDeg = useMemo(() => {
+      // API에서 DWATT 값이 있으면 사용, 없으면 formulaInput 사용
+      const inputValue = extractApiData?.dwatt ?? formulaInput;
+      
       switch (formula) {
         case 1:
-          return equation1(formulaInput);
+          return equation1(inputValue);
         case 2:
-          return equation2(formulaInput);
+          return equation2(inputValue);
         case 3:
         default:
-          return equation3(formulaInput);
+          return equation3(inputValue);
       }
-    }, [formulaInput, formula]);
+    }, [formulaInput, formula, extractApiData]);
 
     // Memoize trigonometric calculations with responsive scaling
     const chartElements = useMemo(() => {
